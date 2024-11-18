@@ -56,7 +56,7 @@ const UserAvatar = () => {
         return null; // Or return a loader/spinner/placeholder
     } else if (user && Object.keys(user).length > 0) {
         // User exists, show username or pubkey
-        const displayName = user.username || user?.email || user?.pubkey.slice(0, 10) + '...';
+        const displayName = user.username || user?.name || user?.email || user?.pubkey.slice(0, 10) + '...' || "Anon";
 
         const items = [
             {

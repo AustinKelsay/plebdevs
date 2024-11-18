@@ -70,6 +70,11 @@ const UserProfile = () => {
                     copyToClipboard(nip19.npubEncode(user?.pubkey));
                 }
             }
+        },
+        {
+            label: 'Open Nostr Profile',
+            icon: 'pi pi-external-link',
+            command: () => window.open(`https://nostr.com/${nip19.npubEncode(user?.pubkey)}`, '_blank')
         }
     ];
 
@@ -106,7 +111,7 @@ const UserProfile = () => {
 
 
                     <h1 className="text-center text-2xl my-2">
-                        {user.username || user?.email || "Anon"}
+                        {user.username || user?.name || user?.email || "Anon"}
                     </h1>
                     {user.pubkey && (
                         <h2 className="text-center text-xl my-2 truncate max-tab:px-4 max-mob:px-4">

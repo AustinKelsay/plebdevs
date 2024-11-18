@@ -1,22 +1,20 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import EmailProvider from "next-auth/providers/email";
-import NDK from "@nostr-dev-kit/ndk";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/db/prisma";
 import nodemailer from 'nodemailer';
 import { findKind0Fields } from "@/utils/nostr";
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
 import { bytesToHex } from '@noble/hashes/utils'
-import { updateUser, getUserByPubkey, createUser, getUserByEmail } from "@/db/models/userModels";
+import { updateUser, getUserByPubkey, createUser } from "@/db/models/userModels";
 import { createRole } from "@/db/models/roleModels";
 import appConfig from "@/config/appConfig";
+import GithubProvider from "next-auth/providers/github";
+import { SimplePool } from "nostr-tools";
+import { finalizeEvent } from "nostr-tools";
 
 // todo: currently email accounts ephemeral privkey gets saved to db but not anon user, is this required at all given the newer auth setup?
-
-const ndk = new NDK({
-    explicitRelayUrls: [...appConfig.defaultRelayUrls]
-});
 
 const authorize = async (pubkey) => {
     await ndk.connect();
@@ -125,6 +123,10 @@ export const authOptions = {
                 });
             }
         }),
+        GithubProvider({
+            clientId: process.env.GITHUB_CLIENT_ID,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET
+        }),
         CredentialsProvider({
             id: "anonymous",
             name: "Anonymous",
@@ -148,7 +150,7 @@ export const authOptions = {
 
                 // Check if user exists in the database
                 let dbUser = await getUserByPubkey(pubkey);
-                
+
                 if (!dbUser) {
                     // Create new user if not exists
                     dbUser = await createUser({
@@ -156,7 +158,7 @@ export const authOptions = {
                         username: pubkey.slice(0, 8), // Use first 8 characters of pubkey as username
                     });
                 }
-                
+
                 // Return user object with pubkey and privkey
                 return { ...dbUser, pubkey, privkey };
             },
@@ -175,14 +177,56 @@ export const authOptions = {
                 const sk = generateSecretKey();
                 const pubkey = getPublicKey(sk);
                 const privkey = bytesToHex(sk);
-                
+
                 // Update the user in the database
                 await prisma.user.update({
                     where: { id: user.id },
                     data: { pubkey, privkey }
                 });
-                
+
                 // Update the user object
+                user.pubkey = pubkey;
+                user.privkey = privkey;
+            }
+
+            // Add new condition for first-time GitHub sign up
+            if (trigger === "signUp" && account?.provider === "github") {
+                const sk = generateSecretKey();
+                const pubkey = getPublicKey(sk);
+                const privkey = bytesToHex(sk);
+
+                // Update the user in the database
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { pubkey, privkey, name: user.name, username: user.name, avatar: user.image || null }
+                });
+
+                // Publish kind0 event to nostr
+                try {
+                    const pool = new SimplePool();
+                    const relays = [
+                        "wss://relay.damus.io",
+                        "wss://relay.nostr.band",
+                        "wss://relay.primal.net",
+                        "wss://relay.devs.tools"
+                    ];
+
+                    const event = finalizeEvent({
+                        kind: 0,
+                        created_at: Math.floor(Date.now() / 1000),
+                        tags: [],
+                        content: JSON.stringify({
+                            name: user.name,
+                            picture: user.image
+                        })
+                    }, privkey);
+
+                    await Promise.any(pool.publish(relays, event));
+                } catch (error) {
+                    console.error('Failed to publish kind0 event:', error);
+                }
+
+                // Update user object with nostr keys
                 user.pubkey = pubkey;
                 user.privkey = privkey;
             }
@@ -218,14 +262,14 @@ export const authOptions = {
         },
         async signIn({ user, account }) {
             if (account.provider === 'anonymous') {
-              return {
-                ...user,
-                pubkey: user.pubkey,
-                privkey: user.privkey,
-              };
+                return {
+                    ...user,
+                    pubkey: user.pubkey,
+                    privkey: user.privkey,
+                };
             }
             return true;
-          },
+        },
     },
     secret: process.env.NEXTAUTH_SECRET,
     session: { strategy: "jwt" },

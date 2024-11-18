@@ -78,6 +78,13 @@ export default function SignIn() {
         rounded
         onClick={() => setShowEmailInput(!showEmailInput)}
       />
+      <GenericButton
+        label={"login with github"}
+        icon="pi pi-github"
+        className="text-[#f8f8ff] w-[250px] my-4 mx-auto"
+        rounded
+        onClick={() => signIn("github")}
+      />
       {showEmailInput && (
         <form onSubmit={handleEmailSignIn} className="flex flex-col items-center bg-gray-700 w-fit mx-auto p-4 rounded-lg">
           <InputText

@@ -11,10 +11,15 @@ import { updateUser, getUserByPubkey, createUser } from "@/db/models/userModels"
 import { createRole } from "@/db/models/roleModels";
 import appConfig from "@/config/appConfig";
 import GithubProvider from "next-auth/providers/github";
+import NDK from "@nostr-dev-kit/ndk";
 import { SimplePool } from "nostr-tools";
 import { finalizeEvent } from "nostr-tools";
 
 // todo: currently email accounts ephemeral privkey gets saved to db but not anon user, is this required at all given the newer auth setup?
+
+const ndk = new NDK({
+    explicitRelayUrls: appConfig.defaultRelayUrls
+})
 
 const authorize = async (pubkey) => {
     await ndk.connect();
@@ -125,7 +130,17 @@ export const authOptions = {
         }),
         GithubProvider({
             clientId: process.env.GITHUB_CLIENT_ID,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET
+            clientSecret: process.env.GITHUB_CLIENT_SECRET,
+            profile: async (profile) => {
+                console.log("GitHub Profile Data:", profile);
+                
+                return {
+                    id: profile.id.toString(),
+                    name: profile.login, // Using login instead of name
+                    email: profile.email,
+                    avatar: profile.avatar_url
+                }
+            }
         }),
         CredentialsProvider({
             id: "anonymous",
@@ -166,6 +181,11 @@ export const authOptions = {
     ],
     callbacks: {
         async jwt({ token, user, account, trigger }) {
+            // Add account to token if it exists
+            if (account) {
+                token.account = account;
+            }
+
             if (trigger === "update" && account?.provider !== "anonymous") {
                 // if we trigger an update call the authorize function again
                 const newUser = await authorize(token.user.pubkey);
@@ -174,6 +194,8 @@ export const authOptions = {
 
             // if we sign up with email and we don't have a pubkey or privkey, we need to generate them
             if (trigger === "signUp" && account?.provider === "email" && !user.pubkey && !user.privkey) {
+                console.log("signUp", user);
+                console.log("account", account);
                 const sk = generateSecretKey();
                 const pubkey = getPublicKey(sk);
                 const privkey = bytesToHex(sk);
@@ -195,40 +217,28 @@ export const authOptions = {
                 const pubkey = getPublicKey(sk);
                 const privkey = bytesToHex(sk);
 
-                // Update the user in the database
+                // Prioritize login as the username and name
+                const githubUsername = token?.login || token.name; // GitHub login is the @username
+
+                // Update the user in the database with all GitHub details
                 await prisma.user.update({
                     where: { id: user.id },
-                    data: { pubkey, privkey, name: user.name, username: user.name, avatar: user.image || null }
+                    data: {
+                        pubkey,
+                        privkey,
+                        name: githubUsername,
+                        username: githubUsername,
+                        avatar: user.image || null,
+                        email: user.email,
+                    }
                 });
 
-                // Publish kind0 event to nostr
-                try {
-                    const pool = new SimplePool();
-                    const relays = [
-                        "wss://relay.damus.io",
-                        "wss://relay.nostr.band",
-                        "wss://relay.primal.net",
-                        "wss://relay.devs.tools"
-                    ];
-
-                    const event = finalizeEvent({
-                        kind: 0,
-                        created_at: Math.floor(Date.now() / 1000),
-                        tags: [],
-                        content: JSON.stringify({
-                            name: user.name,
-                            picture: user.image
-                        })
-                    }, privkey);
-
-                    await Promise.any(pool.publish(relays, event));
-                } catch (error) {
-                    console.error('Failed to publish kind0 event:', error);
-                }
-
-                // Update user object with nostr keys
+                // Update the user object with all credentials
                 user.pubkey = pubkey;
                 user.privkey = privkey;
+                user.name = githubUsername;
+                user.username = githubUsername;
+                user.githubUsername = token?.login || null;
             }
 
             if (user) {
@@ -245,6 +255,10 @@ export const authOptions = {
         },
         async session({ session, token }) {
             session.user = token.user;
+            // Add account from token to session
+            if (token.account) {
+                session.account = token.account;
+            }
             if (token.pubkey && token.privkey) {
                 session.pubkey = token.pubkey;
                 session.privkey = token.privkey;

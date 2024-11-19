@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/useToast";
 import UserProgress from "@/components/profile/progress/UserProgress";
 import { classNames } from "primereact/utils";
 import UserProgressTable from '@/components/profile/DataTables/UserProgressTable';
+import UserPurchaseTable from '@/components/profile/DataTables/UserPurchaseTable';
 
 const UserProfile = () => {
     const windowWidth = useWindowWidth();
@@ -103,14 +104,14 @@ const UserProfile = () => {
                             className="rounded-full my-4"
                         />
                         <div className="absolute top-8 right-80 max-tab:right-20 max-mob:left-0">
-                            <i 
+                            <i
                                 className="pi pi-ellipsis-h text-2xl cursor-pointer"
                                 onClick={(e) => menu.current.toggle(e)}
                             />
-                            <Menu 
-                                model={menuItems} 
-                                popup 
-                                ref={menu} 
+                            <Menu
+                                model={menuItems}
+                                popup
+                                ref={menu}
                                 id="profile-options-menu"
                             />
                         </div>
@@ -143,37 +144,15 @@ const UserProfile = () => {
                     )}
                     <UserProgress />
                 </div>
-                <UserProgressTable 
-                    session={session} 
-                    ndk={ndk} 
-                    windowWidth={windowWidth} 
-                />
-                {session && session?.user && (
-                    <DataTable
-                        emptyMessage="No purchases"
-                        value={session.user?.purchased}
-                        header={purchasesHeader}
-                        style={{ maxWidth: windowWidth < 768 ? "100%" : "90%", margin: "0 auto", borderRadius: "10px" }}
-                        pt={{
-                            wrapper: {
-                                className: "rounded-lg rounded-t-none"
-                            },
-                            header: {
-                                className: "rounded-t-lg mt-4"
-                            }
-                        }}
-                    >
-                        <Column field="amountPaid" header="Cost"></Column>
-                        <Column
-                            body={(rowData) => {
-                                return <PurchasedListItem eventId={rowData?.resource?.noteId || rowData?.course?.noteId} category={rowData?.course ? "courses" : "resources"} />
-                            }}
-                            header="Name"
-                        ></Column>
-                        <Column body={session.user?.purchased?.some((item) => item.courseId) ? "course" : "resource"} header="Category"></Column>
-                        <Column body={rowData => formatDateTime(rowData?.createdAt)} header="Date"></Column>
-                    </DataTable>
-                )}
+                    <UserProgressTable
+                        session={session}
+                        ndk={ndk}
+                        windowWidth={windowWidth}
+                    />
+                    <UserPurchaseTable
+                        session={session}
+                        windowWidth={windowWidth}
+                    />
             </div>
         )
     );

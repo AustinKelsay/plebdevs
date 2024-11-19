@@ -85,7 +85,7 @@ const useTrackVideoLesson = ({lessonId, videoDuration, courseId, videoPlayed, pa
         timerRef.current = setInterval(() => {
           setTimeSpent(prevTime => {
             const newTime = prevTime + 1;
-            // console.log(`⏱️ Time spent: ${newTime}s / ${videoDuration}s (${((newTime/videoDuration)*100).toFixed(1)}%)`);
+            console.log(`⏱️ Time spent: ${newTime}s / ${videoDuration}s (${((newTime/videoDuration)*100).toFixed(1)}%)`);
             return newTime;
           });
         }, 1000);

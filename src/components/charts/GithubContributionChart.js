@@ -91,7 +91,7 @@ const GithubContributionChart = ({ username }) => {
                 {/* Days of week labels */}
                 <div className="flex flex-col gap-[3px] text-[11px] text-gray-400 pr-3">
                     {weekDays.map((day, index) => (
-                        <div key={day} className="h-[12px] leading-[12px]">
+                        <div key={day} className="h-[13px] leading-[13px]">
                             {index % 2 === 0 && day}
                         </div>
                     ))}
@@ -105,7 +105,7 @@ const GithubContributionChart = ({ username }) => {
                                     row[weekIndex] && (
                                         <div
                                             key={`${weekIndex}-${dayIndex}`}
-                                            className={`w-[12px] h-[12px] ${getColor(row[weekIndex].count)} rounded-[2px] cursor-pointer transition-colors duration-100`}
+                                            className={`w-[13px] h-[13px] ${getColor(row[weekIndex].count)} rounded-[2px] cursor-pointer transition-colors duration-100`}
                                             title={`${row[weekIndex].date.toDateString()}: ${row[weekIndex].count} contribution${row[weekIndex].count !== 1 ? 's' : ''}`}
                                         ></div>
                                     )
@@ -130,11 +130,11 @@ const GithubContributionChart = ({ username }) => {
             <div className="text-[11px] text-gray-400 flex items-center justify-end">
                 <span className="mr-2">Less</span>
                 <div className="flex gap-[3px]">
-                    <div className="w-[12px] h-[12px] bg-gray-100 rounded-[2px]"></div>
-                    <div className="w-[12px] h-[12px] bg-green-300 rounded-[2px]"></div>
-                    <div className="w-[12px] h-[12px] bg-green-400 rounded-[2px]"></div>
-                    <div className="w-[12px] h-[12px] bg-green-600 rounded-[2px]"></div>
-                    <div className="w-[12px] h-[12px] bg-green-700 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-gray-100 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-300 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-400 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-600 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-700 rounded-[2px]"></div>
                 </div>
                 <span className="ml-2">More</span>
             </div>

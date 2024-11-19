@@ -21,44 +21,45 @@ const octokit = new ThrottledOctokit({
 });
 
 export async function* getAllCommits(username, since) {
-    let page = 1;
-
-    while (true) {
-        try {
-            const { data: repos } = await octokit.repos.listForUser({
-                username,
-                per_page: 100,
-                page,
-            });
-
-            if (repos.length === 0) break;
-
-            const repoPromises = repos.map(repo => 
-                octokit.repos.listCommits({
-                    owner: username,
-                    repo: repo.name,
-                    since: since.toISOString(),
-                    per_page: 100,
-                })
-            );
-
-            const repoResults = await Promise.allSettled(repoPromises);
-
-            for (const result of repoResults) {
-                if (result.status === 'fulfilled') {
-                    for (const commit of result.value.data) {
-                        yield commit;
-                    }
-                } else {
-                    console.warn(`Error fetching commits: ${result.reason}`);
-                }
-            }
-
-            page++;
-        } catch (error) {
-            console.error("Error fetching repositories:", error.message);
-            break;
+    // Create time windows of 1 month each
+    const endDate = new Date();
+    let currentDate = new Date(since);
+    
+    while (currentDate < endDate) {
+        let nextDate = new Date(currentDate);
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        
+        // If next date would be in the future, use current date instead
+        if (nextDate > endDate) {
+            nextDate = endDate;
         }
+
+        let page = 1;
+        
+        while (true) {
+            try {
+                const { data } = await octokit.search.commits({
+                    q: `author:${username} committer-date:${currentDate.toISOString().split('T')[0]}..${nextDate.toISOString().split('T')[0]}`,
+                    per_page: 100,
+                    page,
+                });
+
+                if (data.items.length === 0) break;
+
+                for (const commit of data.items) {
+                    yield commit;
+                }
+
+                if (data.items.length < 100) break;
+                page++;
+            } catch (error) {
+                console.error("Error fetching commits:", error.message);
+                break;
+            }
+        }
+
+        // Move to next time window
+        currentDate = nextDate;
     }
 }
 

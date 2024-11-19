@@ -7,7 +7,7 @@ import nodemailer from 'nodemailer';
 import { findKind0Fields } from "@/utils/nostr";
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
 import { bytesToHex } from '@noble/hashes/utils'
-import { updateUser, getUserByPubkey, createUser } from "@/db/models/userModels";
+import { updateUser, getUserByPubkey, createUser, getUserById } from "@/db/models/userModels";
 import { createRole } from "@/db/models/roleModels";
 import appConfig from "@/config/appConfig";
 import GithubProvider from "next-auth/providers/github";
@@ -132,11 +132,9 @@ export const authOptions = {
             clientId: process.env.GITHUB_CLIENT_ID,
             clientSecret: process.env.GITHUB_CLIENT_SECRET,
             profile: async (profile) => {
-                console.log("GitHub Profile Data:", profile);
-                
                 return {
                     id: profile.id.toString(),
-                    name: profile.login, // Using login instead of name
+                    name: profile.login,
                     email: profile.email,
                     avatar: profile.avatar_url
                 }
@@ -180,10 +178,18 @@ export const authOptions = {
         }),
     ],
     callbacks: {
-        async jwt({ token, user, account, trigger }) {
-            // Add account to token if it exists
+        async jwt({ token, user, account, trigger, profile }) {
+            // Add account and profile to token if they exist
             if (account) {
                 token.account = account;
+                // Store GitHub-specific information
+                if (account.provider === 'github') {
+                    token.githubProfile = {
+                        login: profile?.login,
+                        avatar_url: profile?.avatar_url,
+                        email: profile?.email,
+                    };
+                }
             }
 
             if (trigger === "update" && account?.provider !== "anonymous") {
@@ -194,8 +200,6 @@ export const authOptions = {
 
             // if we sign up with email and we don't have a pubkey or privkey, we need to generate them
             if (trigger === "signUp" && account?.provider === "email" && !user.pubkey && !user.privkey) {
-                console.log("signUp", user);
-                console.log("account", account);
                 const sk = generateSecretKey();
                 const pubkey = getPublicKey(sk);
                 const privkey = bytesToHex(sk);
@@ -217,8 +221,8 @@ export const authOptions = {
                 const pubkey = getPublicKey(sk);
                 const privkey = bytesToHex(sk);
 
-                // Prioritize login as the username and name
-                const githubUsername = token?.login || token.name; // GitHub login is the @username
+                // Use GitHub login (username) from the profile stored in token
+                const githubUsername = token.githubProfile?.login;
 
                 // Update the user in the database with all GitHub details
                 await prisma.user.update({
@@ -228,8 +232,8 @@ export const authOptions = {
                         privkey,
                         name: githubUsername,
                         username: githubUsername,
-                        avatar: user.image || null,
-                        email: user.email,
+                        avatar: token.githubProfile?.avatar_url || null,
+                        email: token.githubProfile?.email,
                     }
                 });
 
@@ -238,7 +242,8 @@ export const authOptions = {
                 user.privkey = privkey;
                 user.name = githubUsername;
                 user.username = githubUsername;
-                user.githubUsername = token?.login || null;
+                user.avatar = token.githubProfile?.avatar_url;
+                user.email = token.githubProfile?.email;
             }
 
             if (user) {
@@ -254,10 +259,31 @@ export const authOptions = {
             return token;
         },
         async session({ session, token }) {
-            session.user = token.user;
-            // Add account from token to session
+            // If this is a GitHub session, get the full user data from DB first
+            if (token.account?.provider === 'github') {
+                const dbUser = await getUserById(token.user.id);
+                
+                // Start with the complete DB user as the base
+                session.user = dbUser;
+                
+                // Override only the GitHub-specific fields
+                session.user = {
+                    ...dbUser, // This includes role, purchases, userCourses, userLessons, etc.
+                    username: token.githubProfile.login,
+                    avatar: token.githubProfile.avatar_url,
+                    email: token.githubProfile.email
+                };
+            } else {
+                // For non-GitHub sessions, use the existing token.user
+                session.user = token.user;
+            }
+
+            // Keep the rest of the session data
             if (token.account) {
                 session.account = token.account;
+                if (token.account.provider === 'github') {
+                    session.githubProfile = token.githubProfile;
+                }
             }
             if (token.pubkey && token.privkey) {
                 session.pubkey = token.pubkey;

@@ -19,6 +19,7 @@ import useWindowWidth from "@/hooks/useWindowWidth";
 import { useToast } from "@/hooks/useToast";
 import UserProgress from "@/components/profile/progress/UserProgress";
 import { classNames } from "primereact/utils";
+import UserProgressTable from '@/components/profile/DataTables/UserProgressTable';
 
 const UserProfile = () => {
     const windowWidth = useWindowWidth();
@@ -142,42 +143,11 @@ const UserProfile = () => {
                     )}
                     <UserProgress />
                 </div>
-                {!session || !session?.user || !ndk ? (
-                    <div className='w-full h-full flex items-center justify-center'><ProgressSpinner /></div>
-                ) : (
-                    <DataTable
-                        emptyMessage="No Courses or Milestones completed"
-                        value={session.user?.userCourses}
-                        header={header}
-                        style={{ maxWidth: windowWidth < 768 ? "100%" : "90%", margin: "0 auto", borderRadius: "10px" }}
-                        pt={{
-                            wrapper: {
-                                className: "rounded-lg rounded-t-none"
-                            },
-                            header: {
-                                className: "rounded-t-lg"
-                            }
-                        }}
-                    >
-                        <Column
-                            field="completed"
-                            header="Completed"
-                            body={(rowData) => (
-                                <i className={classNames('pi', { 'pi-check-circle text-green-500': rowData.completed, 'pi-times-circle text-red-500': !rowData.completed })}></i>
-                            )}
-                        ></Column>
-                        <Column
-                            body={(rowData) => {
-                                return <ProgressListItem dTag={rowData.courseId} category="name" />
-                            }}
-                            header="Name"
-                        ></Column>
-                        <Column body={(rowData) => {
-                            return <ProgressListItem dTag={rowData.courseId} category="lessons" />
-                        }} header="Lessons"></Column>
-                        <Column body={rowData => formatDateTime(rowData?.createdAt)} header="Date"></Column>
-                    </DataTable>
-                )}
+                <UserProgressTable 
+                    session={session} 
+                    ndk={ndk} 
+                    windowWidth={windowWidth} 
+                />
                 {session && session?.user && (
                     <DataTable
                         emptyMessage="No purchases"

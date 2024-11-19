@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNDKContext } from "@/context/NDKContext";
-import { parseCourseEvent } from "@/utils/nostr";
+import { parseCourseEvent, parseEvent } from "@/utils/nostr";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { nip19 } from "nostr-tools";
 import appConfig from "@/config/appConfig";
 
-const ProgressListItem = ({ dTag, category }) => {
+const ProgressListItem = ({ dTag, category, type = 'course' }) => {
     const { ndk } = useNDKContext();
     const [event, setEvent] = useState(null);
 
@@ -16,25 +16,28 @@ const ProgressListItem = ({ dTag, category }) => {
             try {
                 await ndk.connect();
                 const filter = {
-                    kinds: [30004],
-                    "#d": [dTag]
+                    kinds: type === 'course' ? [30004] : [30023, 30402],
+                    authors: appConfig.authorPubkeys,
+                    "#d": [dTag],
                 }
+                console.log("filter", filter);
                 const event = await ndk.fetchEvent(filter);
+                console.log("event", event);
                 if (event) {
-                    setEvent(parseCourseEvent(event));
+                    setEvent(type === 'course' ? parseCourseEvent(event) : parseEvent(event));
                 }
             } catch (error) {
                 console.error("Error fetching event:", error);
             }
         }
         fetchEvent();
-    }, [dTag, ndk]);
+    }, [dTag, ndk, type]);
 
     const encodeNaddr = () => {
         return nip19.naddrEncode({
             pubkey: event.pubkey,
             identifier: event.d,
-            kind: 30004,
+            kind: type === 'course' ? 30004 : event.kind,
             relays: appConfig.defaultRelayUrls
         })
     }
@@ -43,9 +46,13 @@ const ProgressListItem = ({ dTag, category }) => {
         if (!event) return null;
 
         if (category === "name") {
+            const href = type === 'course' 
+                ? `/course/${encodeNaddr()}`
+                : `/details/${encodeNaddr()}`;
+                
             return (
-                <a className="text-blue-500 underline hover:text-blue-600" href={`/course/${encodeNaddr()}`}>
-                    {event.name}
+                <a className="text-blue-500 underline hover:text-blue-600" href={href}>
+                    {event.name || event.title}
                 </a>
             );
         } else if (category === "lessons") {

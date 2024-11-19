@@ -23,6 +23,7 @@ import { classNames } from "primereact/utils";
 const UserProfile = () => {
     const windowWidth = useWindowWidth();
     const [user, setUser] = useState(null);
+    const [account, setAccount] = useState(null);
     const { data: session } = useSession();
     const { returnImageProxy } = useImageProxy();
     const { ndk, addSigner } = useNDKContext();
@@ -37,7 +38,12 @@ const UserProfile = () => {
 
     useEffect(() => {
         if (session?.user) {
+            console.log("Session", session)
             setUser(session.user);
+
+            if (session?.account) {
+                setAccount(session.account);
+            }
         }
     }, [session]);
 
@@ -129,8 +135,11 @@ const UserProfile = () => {
                             <span className="font-bold">NIP-05:</span> {user.nip05.name}@plebdevs.com <i className="pi pi-copy cursor-pointer hover:text-gray-400" onClick={() => copyToClipboard(user.nip05.name + "@plebdevs.com")} />
                         </h3>
                     )}
-                    {/* <GithubContributionChart username={"austinkelsay"} /> */}
-                    <GithubContributionChartDisabled username={"austinkelsay"} />
+                    {account && account?.provider === "github" ? (
+                        <GithubContributionChart username={user.username} />
+                    ) : (
+                        <GithubContributionChartDisabled username={"austinkelsay"} />
+                    )}
                     <UserProgress />
                 </div>
                 {!session || !session?.user || !ndk ? (

@@ -1,11 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useFetchGithubCommits } from '@/hooks/githubQueries/useFetchGithubCommits';
 import { Tooltip } from 'primereact/tooltip';
+
 const GithubContributionChart = ({ username }) => {
     const [contributionData, setContributionData] = useState({});
     const [totalCommits, setTotalCommits] = useState(0);
 
-    const { data: commits, isLoading, isFetching } = useFetchGithubCommits(username);
+    const handleNewCommit = useCallback(({ contributionData, totalCommits }) => {
+        setContributionData(contributionData);
+        setTotalCommits(totalCommits);
+    }, []);
+
+    const { data, isLoading, isFetching } = useFetchGithubCommits(username, handleNewCommit);
+
+    // Initialize from cached data if available
+    useEffect(() => {
+        if (data && !isLoading) {
+            setContributionData(data.contributionData);
+            setTotalCommits(data.totalCommits);
+        }
+    }, [data, isLoading]);
 
     const getColor = useCallback((count) => {
         if (count === 0) return 'bg-gray-100';
@@ -17,65 +31,110 @@ const GithubContributionChart = ({ username }) => {
 
     const generateCalendar = useCallback(() => {
         const today = new Date();
-        const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
         const calendar = [];
+        
+        // Create 7 rows for days of the week
+        for (let i = 0; i < 7; i++) {
+            calendar[i] = [];
+        }
 
-        for (let d = new Date(sixMonthsAgo); d <= today; d.setDate(d.getDate() + 1)) {
+        // Fill in the dates
+        for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
             const dateString = d.toISOString().split('T')[0];
             const count = contributionData[dateString] || 0;
-            calendar.push({ date: new Date(d), count });
+            const dayOfWeek = d.getDay();
+            calendar[dayOfWeek].push({ date: new Date(d), count });
         }
 
         return calendar;
     }, [contributionData]);
 
-    useEffect(() => {
-        if (commits) {
-            let commitCount = 0;
-            
-            const newContributionData = {};
-            commits.forEach(commit => {
-                const date = commit.commit.author.date.split('T')[0];
-                newContributionData[date] = (newContributionData[date] || 0) + 1;
-                commitCount++;
-            });
-
-            setContributionData(newContributionData);
-            setTotalCommits(commitCount);
-
-            console.log(`Total commits fetched: ${commitCount}`);
-        }
-    }, [commits]);
-
     const calendar = generateCalendar();
+    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    const getMonthLabels = useCallback(() => {
+        const today = new Date();
+        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+        const months = [];
+        let currentMonth = -1;
+
+        for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
+            const month = d.getMonth();
+            if (month !== currentMonth) {
+                months.push({
+                    name: d.toLocaleString('default', { month: 'short' }),
+                    index: calendar[0].findIndex(
+                        (_, weekIndex) => calendar[0][weekIndex]?.date.getMonth() === month
+                    )
+                });
+                currentMonth = month;
+            }
+        }
+        return months;
+    }, [calendar]);
 
     return (
-        <div className="mx-auto py-2 px-4 max-w-[900px] bg-gray-800 rounded-lg">
+        <div className="mx-auto py-4 px-8 max-w-[1000px] bg-gray-800 rounded-lg">
             {(isLoading || isFetching) && <p>Loading contribution data... ({totalCommits} commits fetched)</p>}
             {!isLoading && !isFetching && 
-            <div className="flex justify-between items-center pr-1">
-                <p className="mb-2">Total commits: {totalCommits}</p>
-                <i className="pi pi-question-circle cursor-pointer" data-pr-tooltip="Total number of commits made to GitHub repositories over the last 6 months. (may not be 100% accurate)" />
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-base font-semibold text-gray-200">
+                    {totalCommits} contributions in the last year
+                </h3>
+                <i className="pi pi-question-circle text-lg cursor-pointer text-gray-400 hover:text-gray-200" 
+                   data-pr-tooltip="Total number of commits made to GitHub repositories over the last year. (may not be 100% accurate)" />
                 <Tooltip target=".pi-question-circle" position="top" />
             </div>
             }
-            <div className="flex flex-wrap gap-1">
-                {calendar.map((day, index) => (
-                    <div
-                        key={index}
-                        className={`w-3 h-3 ${getColor(day.count)} rounded-sm cursor-pointer transition-all duration-200 ease-in-out hover:transform hover:scale-150`}
-                        title={`${day.date.toDateString()}: ${day.count} contribution${day.count !== 1 ? 's' : ''}`}
-                    ></div>
-                ))}
+            <div className="flex">
+                {/* Days of week labels */}
+                <div className="flex flex-col gap-[3px] text-[11px] text-gray-400 pr-3">
+                    {weekDays.map((day, index) => (
+                        <div key={day} className="h-[12px] leading-[12px]">
+                            {index % 2 === 0 && day}
+                        </div>
+                    ))}
+                </div>
+                <div className="flex flex-col">
+                    {/* Calendar grid */}
+                    <div className="flex gap-[3px]">
+                        {calendar[0].map((_, weekIndex) => (
+                            <div key={weekIndex} className="flex flex-col gap-[3px]">
+                                {calendar.map((row, dayIndex) => (
+                                    row[weekIndex] && (
+                                        <div
+                                            key={`${weekIndex}-${dayIndex}`}
+                                            className={`w-[12px] h-[12px] ${getColor(row[weekIndex].count)} rounded-[2px] cursor-pointer transition-colors duration-100`}
+                                            title={`${row[weekIndex].date.toDateString()}: ${row[weekIndex].count} contribution${row[weekIndex].count !== 1 ? 's' : ''}`}
+                                        ></div>
+                                    )
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                    {/* Month labels moved to bottom */}
+                    <div className="flex text-[11px] text-gray-400 h-[20px] mt-1">
+                        {getMonthLabels().map((month, index) => (
+                            <div
+                                key={index}
+                                className="absolute"
+                                style={{ marginLeft: `${month.index * 15}px` }}
+                            >
+                                {month.name}
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
-            <div className="mt-2 text-sm text-gray-400 flex items-center">
+            <div className="text-[11px] text-gray-400 flex items-center justify-end">
                 <span className="mr-2">Less</span>
-                <div className="flex gap-1">
-                    <div className="w-3 h-3 bg-gray-100 rounded-sm"></div>
-                    <div className="w-3 h-3 bg-green-300 rounded-sm"></div>
-                    <div className="w-3 h-3 bg-green-400 rounded-sm"></div>
-                    <div className="w-3 h-3 bg-green-600 rounded-sm"></div>
-                    <div className="w-3 h-3 bg-green-700 rounded-sm"></div>
+                <div className="flex gap-[3px]">
+                    <div className="w-[12px] h-[12px] bg-gray-100 rounded-[2px]"></div>
+                    <div className="w-[12px] h-[12px] bg-green-300 rounded-[2px]"></div>
+                    <div className="w-[12px] h-[12px] bg-green-400 rounded-[2px]"></div>
+                    <div className="w-[12px] h-[12px] bg-green-600 rounded-[2px]"></div>
+                    <div className="w-[12px] h-[12px] bg-green-700 rounded-[2px]"></div>
                 </div>
                 <span className="ml-2">More</span>
             </div>

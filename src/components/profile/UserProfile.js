@@ -1,24 +1,19 @@
 import React, { useRef, useState, useEffect } from "react";
-import { DataTable } from "primereact/datatable";
 import { Menu } from "primereact/menu";
-import { Column } from "primereact/column";
 import { useImageProxy } from "@/hooks/useImageProxy";
 import { useSession } from 'next-auth/react';
-import { ProgressSpinner } from "primereact/progressspinner";
-import ProgressListItem from "@/components/content/lists/ProgressListItem";
-import PurchasedListItem from "@/components/content/lists/PurchasedListItem";
 import { useNDKContext } from "@/context/NDKContext";
 import { formatDateTime } from "@/utils/time";
 import { Tooltip } from "primereact/tooltip";
 import { nip19 } from "nostr-tools";
 import Image from "next/image";
+import CombinedContributionChart from "@/components/charts/CombinedContributionChart";
 import GithubContributionChart from "@/components/charts/GithubContributionChart";
 import GithubContributionChartDisabled from "@/components/charts/GithubContributionChartDisabled";
 import useCheckCourseProgress from "@/hooks/tracking/useCheckCourseProgress";
 import useWindowWidth from "@/hooks/useWindowWidth";
 import { useToast } from "@/hooks/useToast";
 import UserProgress from "@/components/profile/progress/UserProgress";
-import { classNames } from "primereact/utils";
 import UserProgressTable from '@/components/profile/DataTables/UserProgressTable';
 import UserPurchaseTable from '@/components/profile/DataTables/UserPurchaseTable';
 
@@ -138,7 +133,7 @@ const UserProfile = () => {
                         </h3>
                     )}
                     {account && account?.provider === "github" ? (
-                        <GithubContributionChart username={user.username} />
+                        <CombinedContributionChart username={user.username} session={session} />
                     ) : (
                         <GithubContributionChartDisabled username={"austinkelsay"} />
                     )}

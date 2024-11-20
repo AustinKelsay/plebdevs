@@ -1,31 +1,116 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFetchGithubCommits } from '@/hooks/githubQueries/useFetchGithubCommits';
 import { Tooltip } from 'primereact/tooltip';
+import { formatDateTime } from "@/utils/time";
 
-const GithubContributionChart = ({ username }) => {
+const CombinedContributionChart = ({ username, session }) => {
     const [contributionData, setContributionData] = useState({});
-    const [totalCommits, setTotalCommits] = useState(0);
+    const [totalContributions, setTotalContributions] = useState(0);
+
+    const prepareProgressData = useCallback(() => {
+        if (!session?.user?.userCourses) return {};
+        
+        const activityData = {};
+        const allActivities = [];  // Array to store all activities for logging
+        
+        // Process course activities
+        session.user.userCourses.forEach(courseProgress => {
+            if (courseProgress.started) {
+                const startDate = new Date(courseProgress.startedAt);
+                startDate.setFullYear(new Date().getFullYear());
+                const date = startDate.toISOString().split('T')[0];
+                activityData[date] = (activityData[date] || 0) + 1;
+                allActivities.push({
+                    type: 'course_started',
+                    name: courseProgress.course?.name,
+                    date: date
+                });
+            }
+            if (courseProgress.completed) {
+                const completeDate = new Date(courseProgress.completedAt);
+                completeDate.setFullYear(new Date().getFullYear());
+                const date = completeDate.toISOString().split('T')[0];
+                activityData[date] = (activityData[date] || 0) + 1;
+                allActivities.push({
+                    type: 'course_completed',
+                    name: courseProgress.course?.name,
+                    date: date
+                });
+            }
+        });
+
+        // Process lesson activities
+        session.user.userLessons?.forEach(lessonProgress => {
+            if (lessonProgress.opened) {
+                const openDate = new Date(lessonProgress.openedAt);
+                openDate.setFullYear(new Date().getFullYear());
+                const date = openDate.toISOString().split('T')[0];
+                activityData[date] = (activityData[date] || 0) + 1;
+                allActivities.push({
+                    type: 'lesson_started',
+                    name: lessonProgress.lesson?.name,
+                    date: date
+                });
+            }
+            if (lessonProgress.completed) {
+                const completeDate = new Date(lessonProgress.completedAt);
+                completeDate.setFullYear(new Date().getFullYear());
+                const date = completeDate.toISOString().split('T')[0];
+                activityData[date] = (activityData[date] || 0) + 1;
+                allActivities.push({
+                    type: 'lesson_completed',
+                    name: lessonProgress.lesson?.name,
+                    date: date
+                });
+            }
+        });
+
+        console.log('All Learning Activities:', allActivities);
+        console.log('Activities by Date:', activityData);
+
+        return activityData;
+    }, [session]);
 
     const handleNewCommit = useCallback(({ contributionData, totalCommits }) => {
-        setContributionData(contributionData);
-        setTotalCommits(totalCommits);
-    }, []);
+        const activityData = prepareProgressData();
+        console.log("GitHub Contribution Data:", contributionData);
+        
+        // Create a new object with GitHub commits
+        const combinedData = { ...contributionData };
+        
+        // Add activities to the combined data
+        Object.entries(activityData).forEach(([date, count]) => {
+            combinedData[date] = (combinedData[date] || 0) + count;
+        });
+        
+        console.log("Combined Data:", combinedData);
+        setContributionData(combinedData);
+        setTotalContributions(totalCommits + Object.values(activityData).reduce((a, b) => a + b, 0));
+    }, [prepareProgressData]);
 
     const { data, isLoading, isFetching } = useFetchGithubCommits(username, handleNewCommit);
 
     // Initialize from cached data if available
     useEffect(() => {
         if (data && !isLoading) {
-            setContributionData(data.contributionData);
-            setTotalCommits(data.totalCommits);
+            const activityData = prepareProgressData();
+            const combinedData = { ...data.contributionData };
+            
+            // Add activities to the combined data
+            Object.entries(activityData).forEach(([date, count]) => {
+                combinedData[date] = (combinedData[date] || 0) + count;
+            });
+            
+            setContributionData(combinedData);
+            setTotalContributions(data.totalCommits + Object.values(activityData).reduce((a, b) => a + b, 0));
         }
-    }, [data, isLoading]);
+    }, [data, isLoading, prepareProgressData]);
 
     const getColor = useCallback((count) => {
         if (count === 0) return 'bg-gray-100';
-        if (count < 5) return 'bg-green-300';
-        if (count < 10) return 'bg-green-400';
-        if (count < 20) return 'bg-green-600';
+        if (count < 3) return 'bg-green-300';
+        if (count < 6) return 'bg-green-400';
+        if (count < 12) return 'bg-green-600';
         return 'bg-green-700';
     }, []);
 
@@ -42,13 +127,19 @@ const GithubContributionChart = ({ username }) => {
         // Fill in the dates
         for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
             const dateString = d.toISOString().split('T')[0];
-            const count = contributionData[dateString] || 0;
-            const dayOfWeek = d.getDay();
-            calendar[dayOfWeek].push({ date: new Date(d), count });
+            const githubCount = data?.contributionData[dateString] || 0;
+            const activityCount = (contributionData[dateString] || 0) - (data?.contributionData[dateString] || 0);
+            const totalCount = githubCount + activityCount;
+            calendar[d.getDay()].push({ 
+                date: new Date(d), 
+                count: totalCount,
+                githubCount,
+                activityCount
+            });
         }
 
         return calendar;
-    }, [contributionData]);
+    }, [contributionData, data?.contributionData]);
 
     const calendar = generateCalendar();
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -76,14 +167,14 @@ const GithubContributionChart = ({ username }) => {
 
     return (
         <div className="mx-auto py-2 px-8 max-w-[1000px] bg-gray-800 rounded-lg">
-            {(isLoading || isFetching) && <p>Loading contribution data... ({totalCommits} commits fetched)</p>}
+            {(isLoading || isFetching) && <p>Loading contribution data... ({totalContributions} total contributions / activities fetched)</p>}
             {!isLoading && !isFetching && 
             <div className="flex justify-between items-center mb-3">
                 <h4 className="text-base font-semibold text-gray-200">
-                    {totalCommits} contributions in the last year
+                    {totalContributions} total contributions / activities in the last year
                 </h4>
                 <i className="pi pi-question-circle text-lg cursor-pointer text-gray-400 hover:text-gray-200" 
-                   data-pr-tooltip="Total number of commits made to GitHub repositories over the last year. (may not be 100% accurate)" />
+                   data-pr-tooltip="Combined total of GitHub commits and learning activities (starting/completing courses and lessons)" />
                 <Tooltip target=".pi-question-circle" position="top" />
             </div>
             }
@@ -91,7 +182,7 @@ const GithubContributionChart = ({ username }) => {
                 {/* Days of week labels */}
                 <div className="flex flex-col gap-[3px] text-[11px] text-gray-400 pr-3">
                     {weekDays.map((day, index) => (
-                        <div key={day} className="h-[12px] leading-[12px]">
+                        <div key={day} className="h-[13px] leading-[13px]">
                             {index % 2 === 0 && day}
                         </div>
                     ))}
@@ -105,8 +196,13 @@ const GithubContributionChart = ({ username }) => {
                                     row[weekIndex] && (
                                         <div
                                             key={`${weekIndex}-${dayIndex}`}
-                                            className={`w-[12px] h-[12px] ${getColor(row[weekIndex].count)} rounded-[2px] cursor-pointer transition-colors duration-100`}
-                                            title={`${row[weekIndex].date.toDateString()}: ${row[weekIndex].count} contribution${row[weekIndex].count !== 1 ? 's' : ''}`}
+                                            className={`w-[13px] h-[13px] ${getColor(row[weekIndex].count)} rounded-[2px] cursor-pointer transition-colors duration-100`}
+                                            title={`${row[weekIndex].date.toDateString()}: ${
+                                                [
+                                                    row[weekIndex].githubCount > 0 ? `${row[weekIndex].githubCount} contribution${row[weekIndex].githubCount !== 1 ? 's' : ''}` : '',
+                                                    row[weekIndex].activityCount > 0 ? `${row[weekIndex].activityCount} activit${row[weekIndex].activityCount !== 1 ? 'ies' : 'y'}` : ''
+                                                ].filter(Boolean).join(' & ') || 'No contributions or activities'
+                                            }`}
                                         ></div>
                                     )
                                 ))}
@@ -130,11 +226,11 @@ const GithubContributionChart = ({ username }) => {
             <div className="text-[11px] text-gray-400 flex items-center justify-end">
                 <span className="mr-2">Less</span>
                 <div className="flex gap-[3px]">
-                    <div className="w-[12px] h-[12px] bg-gray-100 rounded-[2px]"></div>
-                    <div className="w-[12px] h-[12px] bg-green-300 rounded-[2px]"></div>
-                    <div className="w-[12px] h-[12px] bg-green-400 rounded-[2px]"></div>
-                    <div className="w-[12px] h-[12px] bg-green-600 rounded-[2px]"></div>
-                    <div className="w-[12px] h-[12px] bg-green-700 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-gray-100 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-300 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-400 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-600 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-700 rounded-[2px]"></div>
                 </div>
                 <span className="ml-2">More</span>
             </div>
@@ -142,4 +238,4 @@ const GithubContributionChart = ({ username }) => {
     );
 };
 
-export default GithubContributionChart;
+export default CombinedContributionChart;

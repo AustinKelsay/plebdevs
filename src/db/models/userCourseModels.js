@@ -20,6 +20,24 @@ export const getUserCourse = async (userId, courseId) => {
 };
 
 export const createOrUpdateUserCourse = async (userId, courseId, data) => {
+  const existing = await prisma.userCourse.findUnique({
+    where: {
+      userId_courseId: {
+        userId,
+        courseId,
+      },
+    },
+  });
+
+  const updateData = existing?.completed ? {
+    ...data,
+    updatedAt: new Date(),
+    completedAt: existing.completedAt,
+  } : {
+    ...data,
+    updatedAt: new Date(),
+  };
+
   return await prisma.userCourse.upsert({
     where: {
       userId_courseId: {
@@ -27,10 +45,7 @@ export const createOrUpdateUserCourse = async (userId, courseId, data) => {
         courseId,
       },
     },
-    update: {
-      ...data,
-      updatedAt: new Date(),
-    },
+    update: updateData,
     create: {
       userId,
       courseId,
@@ -72,10 +87,19 @@ export const checkCourseCompletion = async (userId, courseId) => {
     lesson.userLessons.length > 0 && lesson.userLessons[0].completed
   );
 
+  const existingUserCourse = await prisma.userCourse.findUnique({
+    where: {
+      userId_courseId: {
+        userId,
+        courseId,
+      }
+    }
+  });
+
   if (allLessonsCompleted) {
     await createOrUpdateUserCourse(userId, courseId, {
       completed: true,
-      completedAt: new Date()
+      ...(existingUserCourse?.completed ? {} : { completedAt: new Date() })
     });
     return true;
   }

@@ -24,7 +24,7 @@ const useCheckCourseProgress = () => {
               completed: true,
               completedAt: new Date().toISOString(),
             });
-            update()
+            update();
           }
         } catch (error) {
           console.error(`Failed to update course ${courseId} completion status:`, error);

@@ -104,7 +104,7 @@ const useTrackVideoLesson = ({lessonId, videoDuration, courseId, videoPlayed, pa
   useEffect(() => {
     if (isAdmin) return;
 
-    if (videoDuration && timeSpent >= Math.round(videoDuration * 0.9) && !completedRef.current) {
+    if (videoDuration && timeSpent >= Math.round(videoDuration * 0.8) && !completedRef.current) {
       console.log('🎯 Video reached 90% threshold - Marking as completed');
       markLessonAsCompleted();
     }

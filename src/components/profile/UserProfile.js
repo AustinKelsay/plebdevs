@@ -9,6 +9,7 @@ import { nip19 } from "nostr-tools";
 import Image from "next/image";
 import CombinedContributionChart from "@/components/charts/CombinedContributionChart";
 import GithubContributionChart from "@/components/charts/GithubContributionChart";
+import ActivityContributionChart from "@/components/charts/ActivityContributionChart";
 import GithubContributionChartDisabled from "@/components/charts/GithubContributionChartDisabled";
 import useCheckCourseProgress from "@/hooks/tracking/useCheckCourseProgress";
 import useWindowWidth from "@/hooks/useWindowWidth";
@@ -135,7 +136,7 @@ const UserProfile = () => {
                     {account && account?.provider === "github" ? (
                         <CombinedContributionChart username={user.username} session={session} />
                     ) : (
-                        <GithubContributionChartDisabled username={"austinkelsay"} />
+                        <ActivityContributionChart session={session} />
                     )}
                     <UserProgress />
                 </div>

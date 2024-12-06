@@ -17,8 +17,8 @@ const CombinedContributionChart = ({ username, session }) => {
         session.user.userCourses.forEach(courseProgress => {
             if (courseProgress.started) {
                 const startDate = new Date(courseProgress.startedAt);
-                startDate.setFullYear(new Date().getFullYear());
-                const date = startDate.toISOString().split('T')[0];
+                const date = new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000)
+                    .toLocaleDateString('en-CA');
                 activityData[date] = (activityData[date] || 0) + 1;
                 allActivities.push({
                     type: 'course_started',
@@ -28,8 +28,8 @@ const CombinedContributionChart = ({ username, session }) => {
             }
             if (courseProgress.completed) {
                 const completeDate = new Date(courseProgress.completedAt);
-                completeDate.setFullYear(new Date().getFullYear());
-                const date = completeDate.toISOString().split('T')[0];
+                const date = new Date(completeDate.getTime() - completeDate.getTimezoneOffset() * 60000)
+                    .toLocaleDateString('en-CA');
                 activityData[date] = (activityData[date] || 0) + 1;
                 allActivities.push({
                     type: 'course_completed',
@@ -43,8 +43,8 @@ const CombinedContributionChart = ({ username, session }) => {
         session.user.userLessons?.forEach(lessonProgress => {
             if (lessonProgress.opened) {
                 const openDate = new Date(lessonProgress.openedAt);
-                openDate.setFullYear(new Date().getFullYear());
-                const date = openDate.toISOString().split('T')[0];
+                const date = new Date(openDate.getTime() - openDate.getTimezoneOffset() * 60000)
+                    .toLocaleDateString('en-CA');
                 activityData[date] = (activityData[date] || 0) + 1;
                 allActivities.push({
                     type: 'lesson_started',
@@ -54,8 +54,8 @@ const CombinedContributionChart = ({ username, session }) => {
             }
             if (lessonProgress.completed) {
                 const completeDate = new Date(lessonProgress.completedAt);
-                completeDate.setFullYear(new Date().getFullYear());
-                const date = completeDate.toISOString().split('T')[0];
+                const date = new Date(completeDate.getTime() - completeDate.getTimezoneOffset() * 60000)
+                    .toLocaleDateString('en-CA');
                 activityData[date] = (activityData[date] || 0) + 1;
                 allActivities.push({
                     type: 'lesson_completed',
@@ -116,26 +116,39 @@ const CombinedContributionChart = ({ username, session }) => {
 
     const generateCalendar = useCallback(() => {
         const today = new Date();
-        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-        const calendar = [];
+        today.setHours(23, 59, 59, 999);
         
-        // Create 7 rows for days of the week
+        // Calculate the start date (52 weeks + remaining days to today)
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setDate(today.getDate() - 364); // 52 weeks * 7 days = 364 days
+        
+        // Start from the first Sunday before or on oneYearAgo
+        const startDate = new Date(oneYearAgo);
+        startDate.setDate(startDate.getDate() - startDate.getDay());
+        
+        const calendar = [];
+        // Create 7 rows for days of the week (Sunday to Saturday)
         for (let i = 0; i < 7; i++) {
             calendar[i] = [];
         }
 
-        // Fill in the dates
-        for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
-            const dateString = d.toISOString().split('T')[0];
+        // Fill in the dates by week columns
+        let currentDate = new Date(startDate);
+        while (currentDate <= today) {
+            const weekDay = currentDate.getDay();
+            const dateString = currentDate.toLocaleDateString('en-CA');
             const githubCount = data?.contributionData[dateString] || 0;
             const activityCount = (contributionData[dateString] || 0) - (data?.contributionData[dateString] || 0);
             const totalCount = githubCount + activityCount;
-            calendar[d.getDay()].push({ 
-                date: new Date(d), 
+            
+            calendar[weekDay].push({
+                date: new Date(currentDate),
                 count: totalCount,
                 githubCount,
                 activityCount
             });
+            
+            currentDate.setDate(currentDate.getDate() + 1);
         }
 
         return calendar;
@@ -146,7 +159,9 @@ const CombinedContributionChart = ({ username, session }) => {
 
     const getMonthLabels = useCallback(() => {
         const today = new Date();
-        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        oneYearAgo.setDate(today.getDate() + 1);
         const months = [];
         let currentMonth = -1;
 

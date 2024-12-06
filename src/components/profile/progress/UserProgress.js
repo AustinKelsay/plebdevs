@@ -4,7 +4,16 @@ import { Accordion, AccordionTab } from 'primereact/accordion';
 import { useSession } from 'next-auth/react';
 
 const allTasks = [
-    { status: 'Create Account', completed: true, tier: 'Pleb', courseId: null },
+    {
+        status: 'Connect GitHub', 
+        completed: false, 
+        tier: 'Pleb', 
+        courseId: null,
+        subTasks: [
+            { status: 'Create First GitHub Repo', completed: false },
+            { status: 'Push Commit', completed: false }
+        ]
+    },
     {
         status: 'PlebDevs Starter',
         completed: false,
@@ -16,23 +25,23 @@ const allTasks = [
             { status: 'Push Commit', completed: false }
         ]
     },
-    { 
-        status: 'Frontend Course', 
-        completed: false, 
-        tier: 'Junior Dev', 
+    {
+        status: 'Frontend Course',
+        completed: false,
+        tier: 'Junior Dev',
         courseId: 'f73c37f4-df2e-4f7d-a838-dce568c76136',
         subTasks: [
             { status: 'Complete the course', completed: false },
             { status: 'Submit Link to completed project', completed: false },
         ]
     },
-    { 
-        status: 'Backend Course', 
-        completed: false, 
-        tier: 'Plebdev', 
+    {
+        status: 'Backend Course',
+        completed: false,
+        tier: 'Plebdev',
         courseId: 'f6825391-831c-44da-904a-9ac3d149b7be',
         subTasks: [
-            {status: 'Complete the course', completed: false},
+            { status: 'Complete the course', completed: false },
             { status: 'Submit Link to completed project', completed: false },
         ]
     },
@@ -79,7 +88,7 @@ const UserProgress = () => {
 
     const calculateProgress = (completedCourseIds) => {
         let progressValue = 25;
-        
+
         const remainingTasks = allTasks.slice(1);
         remainingTasks.forEach(task => {
             if (completedCourseIds.includes(task.courseId)) {
@@ -92,7 +101,7 @@ const UserProgress = () => {
 
     const calculateCurrentTier = (completedCourseIds) => {
         let tier = 'Pleb';
-        
+
         if (completedCourseIds.includes("f538f5c5-1a72-4804-8eb1-3f05cea64874")) {
             tier = 'New Dev';
         }
@@ -102,7 +111,7 @@ const UserProgress = () => {
         if (completedCourseIds.includes("f6825391-831c-44da-904a-9ac3d149b7be")) {
             tier = 'Plebdev';
         }
-        
+
         setCurrentTier(tier);
     };
 
@@ -115,7 +124,7 @@ const UserProgress = () => {
 
     return (
         <div className="bg-gray-800 rounded-3xl p-6 w-[500px] max-mob:w-full max-tab:w-full mx-auto my-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Dev Journey (coming soon)</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Dev Journey</h1>
             <p className="text-gray-400 mb-4">Track your progress from Pleb to Plebdev</p>
 
             <div className="flex justify-between items-center mb-2">
@@ -135,6 +144,7 @@ const UserProgress = () => {
 
             <ul className="space-y-4 mb-6">
                 {tasks.map((task, index) => (
+                    console.log(task),
                     <li key={index}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center">

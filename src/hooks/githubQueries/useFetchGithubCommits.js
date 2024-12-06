@@ -5,8 +5,9 @@ export function useFetchGithubCommits(username, onCommitReceived) {
   return useQuery({
     queryKey: ['githubCommits', username],
     queryFn: async () => {
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      const today = new Date();
+      const oneYearAgo = new Date(today);
+      oneYearAgo.setDate(today.getDate() - 364); // Exactly 52 weeks
       
       const commits = [];
       const contributionData = {};

@@ -13,12 +13,12 @@ const ActivityContributionChart = ({ session }) => {
         const activityData = {};
         const allActivities = [];
         
-        // ... existing course activities processing ...
+        // Process course activities
         session.user.userCourses.forEach(courseProgress => {
             if (courseProgress.started) {
                 const startDate = new Date(courseProgress.startedAt);
-                startDate.setFullYear(new Date().getFullYear());
-                const date = startDate.toISOString().split('T')[0];
+                const date = new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000)
+                    .toISOString().split('T')[0];
                 activityData[date] = (activityData[date] || 0) + 1;
                 allActivities.push({
                     type: 'course_started',
@@ -26,13 +26,47 @@ const ActivityContributionChart = ({ session }) => {
                     date: date
                 });
             }
-            // ... rest of the course processing ...
+            if (courseProgress.completed) {
+                const completeDate = new Date(courseProgress.completedAt);
+                const date = new Date(completeDate.getTime() - completeDate.getTimezoneOffset() * 60000)
+                    .toISOString().split('T')[0];
+                activityData[date] = (activityData[date] || 0) + 1;
+                allActivities.push({
+                    type: 'course_completed',
+                    name: courseProgress.course?.name,
+                    date: date
+                });
+            }
         });
 
-        // ... existing lesson activities processing ...
+        // Process lesson activities
         session.user.userLessons?.forEach(lessonProgress => {
-            // ... lesson processing ...
+            if (lessonProgress.opened) {
+                const openDate = new Date(lessonProgress.openedAt);
+                const date = new Date(openDate.getTime() - openDate.getTimezoneOffset() * 60000)
+                    .toISOString().split('T')[0];
+                activityData[date] = (activityData[date] || 0) + 1;
+                allActivities.push({
+                    type: 'lesson_started',
+                    name: lessonProgress.lesson?.name,
+                    date: date
+                });
+            }
+            if (lessonProgress.completed) {
+                const completeDate = new Date(lessonProgress.completedAt);
+                const date = new Date(completeDate.getTime() - completeDate.getTimezoneOffset() * 60000)
+                    .toISOString().split('T')[0];
+                activityData[date] = (activityData[date] || 0) + 1;
+                allActivities.push({
+                    type: 'lesson_completed',
+                    name: lessonProgress.lesson?.name,
+                    date: date
+                });
+            }
         });
+
+        console.log('All Learning Activities:', allActivities);
+        console.log('Activities by Date:', activityData);
 
         setContributionData(activityData);
         setTotalActivities(Object.values(activityData).reduce((a, b) => a + b, 0));
@@ -47,30 +81,52 @@ const ActivityContributionChart = ({ session }) => {
 
     const getColor = useCallback((count) => {
         if (count === 0) return 'bg-gray-100';
-        if (count === 1) return 'bg-purple-300';
-        if (count === 2) return 'bg-purple-400';
-        if (count === 3) return 'bg-purple-600';
-        return 'bg-purple-700';
+        if (count < 3) return 'bg-green-300';
+        if (count < 6) return 'bg-green-400';
+        if (count < 12) return 'bg-green-600';
+        return 'bg-green-700';
     }, []);
 
     const generateCalendar = useCallback(() => {
         const today = new Date();
-        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-        const calendar = [];
+        today.setHours(23, 59, 59, 999);
         
-        // Create 7 rows for days of the week
+        // Calculate the start date (52 weeks + remaining days to today)
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setDate(today.getDate() - 364);
+        
+        // Start from the first Sunday before or on oneYearAgo
+        const startDate = new Date(oneYearAgo);
+        startDate.setDate(startDate.getDate() - startDate.getDay());
+        
+        const calendar = [];
         for (let i = 0; i < 7; i++) {
             calendar[i] = [];
         }
 
-        // Fill in the dates
-        for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
-            const dateString = d.toISOString().split('T')[0];
+        // Fill in the dates by week columns
+        let currentDate = new Date(startDate);
+        while (currentDate <= today) {
+            const weekDay = currentDate.getDay();
+            // Use local timezone date string instead of ISO string
+            const dateString = currentDate.toLocaleDateString('en-CA'); // YYYY-MM-DD format
             const activityCount = contributionData[dateString] || 0;
-            calendar[d.getDay()].push({ 
-                date: new Date(d), 
+            
+            // Debug log
+            if (activityCount > 0) {
+                console.log('Found activity:', {
+                    date: currentDate.toDateString(),
+                    dateString,
+                    activityCount
+                });
+            }
+            
+            calendar[weekDay].push({
+                date: new Date(currentDate),
                 count: activityCount
             });
+            
+            currentDate.setDate(currentDate.getDate() + 1);
         }
 
         return calendar;
@@ -78,22 +134,33 @@ const ActivityContributionChart = ({ session }) => {
 
     const getMonthLabels = useCallback(() => {
         const today = new Date();
-        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+        today.setHours(23, 59, 59, 999);
+        
+        // Calculate exactly 52 weeks back
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setDate(today.getDate() - 364);
+        
+        // Start from the first Sunday
+        const startDate = new Date(oneYearAgo);
+        startDate.setDate(startDate.getDate() - startDate.getDay());
+        
         const months = [];
         let currentMonth = -1;
         const calendar = generateCalendar();
 
-        for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
-            const month = d.getMonth();
+        let currentDate = new Date(startDate);
+        while (currentDate <= today) {
+            const month = currentDate.getMonth();
             if (month !== currentMonth) {
                 months.push({
-                    name: d.toLocaleString('default', { month: 'short' }),
+                    name: currentDate.toLocaleString('default', { month: 'short' }),
                     index: calendar[0].findIndex(
                         (_, weekIndex) => calendar[0][weekIndex]?.date.getMonth() === month
                     )
                 });
                 currentMonth = month;
             }
+            currentDate.setDate(currentDate.getDate() + 1);
         }
         return months;
     }, [generateCalendar]);
@@ -108,7 +175,7 @@ const ActivityContributionChart = ({ session }) => {
                     {totalActivities} learning activities in the last year
                 </h4>
                 <i className="pi pi-question-circle text-lg cursor-pointer text-gray-400 hover:text-gray-200" 
-                   data-pr-tooltip="Total number of learning activities (starting/completing courses and lessons)" />
+                   data-pr-tooltip="Total number of learning activities on the platform" />
                 <Tooltip target=".pi-question-circle" position="top" />
             </div>
             <div className="flex">
@@ -160,10 +227,10 @@ const ActivityContributionChart = ({ session }) => {
                 <span className="mr-2">Less</span>
                 <div className="flex gap-[3px]">
                     <div className="w-[13px] h-[13px] bg-gray-100 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-purple-300 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-purple-400 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-purple-600 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-purple-700 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-300 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-400 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-600 rounded-[2px]"></div>
+                    <div className="w-[13px] h-[13px] bg-green-700 rounded-[2px]"></div>
                 </div>
                 <span className="ml-2">More</span>
             </div>

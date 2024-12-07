@@ -12,8 +12,6 @@ import { createRole } from "@/db/models/roleModels";
 import appConfig from "@/config/appConfig";
 import GithubProvider from "next-auth/providers/github";
 import NDK from "@nostr-dev-kit/ndk";
-import { SimplePool } from "nostr-tools";
-import { finalizeEvent } from "nostr-tools";
 
 // todo: currently email accounts ephemeral privkey gets saved to db but not anon user, is this required at all given the newer auth setup?
 
@@ -40,7 +38,7 @@ const authorize = async (pubkey) => {
                     dbUser = await getUserByPubkey(pubkey);
                 }
             } else if (fields.username !== dbUser.username) {
-                const updatedUser = await updateUser(dbUser.id, { username: fields.username });
+                const updatedUser = await updateUser(dbUser.id, { username: fields.username, name: fields.username });
                 if (updatedUser) {
                     dbUser = await getUserByPubkey(pubkey);
                 }
@@ -53,7 +51,7 @@ const authorize = async (pubkey) => {
             // Create user
             if (profile) {
                 const fields = await findKind0Fields(profile);
-                const payload = { pubkey, username: fields.username, avatar: fields.avatar };
+                const payload = { pubkey, username: fields.username, avatar: fields.avatar, name: fields.username };
 
                 if (appConfig.authorPubkeys.includes(pubkey)) {
                     // create a new author role for this user
@@ -168,8 +166,32 @@ export const authOptions = {
                     // Create new user if not exists
                     dbUser = await createUser({
                         pubkey: pubkey,
-                        username: pubkey.slice(0, 8), // Use first 8 characters of pubkey as username
+                        username: pubkey.slice(0, 8),
                     });
+                } else {
+                    // Check if this user has a linked GitHub account
+                    const githubAccount = await prisma.account.findFirst({
+                        where: {
+                            userId: dbUser.id,
+                            provider: 'github'
+                        },
+                        include: {
+                            user: true
+                        }
+                    });
+
+                    if (githubAccount) {
+                        // Return the user with GitHub provider information
+                        return {
+                            ...dbUser,
+                            pubkey,
+                            privkey,
+                            // Add these fields to switch to GitHub provider
+                            provider: 'github',
+                            type: 'oauth',
+                            providerAccountId: githubAccount.providerAccountId
+                        };
+                    }
                 }
 
                 // Return user object with pubkey and privkey
@@ -179,11 +201,23 @@ export const authOptions = {
     ],
     callbacks: {
         async jwt({ token, user, account, trigger, profile }) {
-            // Add account and profile to token if they exist
-            if (account) {
-                token.account = account;
+            if (user?.provider === 'github') {
+                // User has a linked GitHub account, use that as the primary provider
+                token.account = {
+                    provider: 'github',
+                    type: 'oauth',
+                    providerAccountId: user.providerAccountId
+                };
+                // Add GitHub profile information
+                token.githubProfile = {
+                    login: user.username,
+                    avatar_url: user.avatar,
+                    email: user.email
+                };
+            } else if (account) {
                 // Store GitHub-specific information
                 if (account.provider === 'github') {
+                    token.account = account;
                     token.githubProfile = {
                         login: profile?.login,
                         avatar_url: profile?.avatar_url,
@@ -246,6 +280,22 @@ export const authOptions = {
                 user.email = token.githubProfile?.email;
             }
 
+            if (account && account.provider === "github" && user?.id && user?.pubkey) {
+                // we are linking a github account to an existing account
+                const updatedUser = await updateUser(user.id, {
+                    name: profile?.login,
+                    username: profile?.login,
+                    avatar: profile?.avatar_url,
+                    email: profile?.email,
+                    privkey: user.privkey || token.privkey, // Preserve the existing privkey
+                    image: profile?.avatar_url, // Also save to image field
+                });
+                
+                if (updatedUser) {
+                    user = await getUserById(user.id);
+                }
+            }
+
             if (user) {
                 token.user = user;
                 if (user.pubkey && user.privkey) {
@@ -269,9 +319,10 @@ export const authOptions = {
                 // Override only the GitHub-specific fields
                 session.user = {
                     ...dbUser, // This includes role, purchases, userCourses, userLessons, etc.
-                    username: token.githubProfile.login,
-                    avatar: token.githubProfile.avatar_url,
-                    email: token.githubProfile.email
+                    username: token.githubProfile?.login,
+                    name: token.githubProfile?.login,
+                    avatar: token.githubProfile?.avatar_url,
+                    email: token.githubProfile?.email
                 };
             } else {
                 // For non-GitHub sessions, use the existing token.user

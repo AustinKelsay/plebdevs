@@ -65,9 +65,6 @@ const ActivityContributionChart = ({ session }) => {
             }
         });
 
-        console.log('All Learning Activities:', allActivities);
-        console.log('Activities by Date:', activityData);
-
         setContributionData(activityData);
         setTotalActivities(Object.values(activityData).reduce((a, b) => a + b, 0));
         
@@ -111,15 +108,6 @@ const ActivityContributionChart = ({ session }) => {
             // Use local timezone date string instead of ISO string
             const dateString = currentDate.toLocaleDateString('en-CA'); // YYYY-MM-DD format
             const activityCount = contributionData[dateString] || 0;
-            
-            // Debug log
-            if (activityCount > 0) {
-                console.log('Found activity:', {
-                    date: currentDate.toDateString(),
-                    dateString,
-                    activityCount
-                });
-            }
             
             calendar[weekDay].push({
                 date: new Date(currentDate),

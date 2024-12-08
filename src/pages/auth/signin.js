@@ -38,28 +38,42 @@ export default function SignIn() {
     const storedPubkey = localStorage.getItem('anonymousPubkey')
     const storedPrivkey = localStorage.getItem('anonymousPrivkey')
     
-    const result = await signIn("anonymous", { 
-      pubkey: storedPubkey, 
-      privkey: storedPrivkey,
-      redirect: false
-    })
+    try {
+        const result = await signIn("anonymous", { 
+            pubkey: storedPubkey, 
+            privkey: storedPrivkey,
+            redirect: false,
+            callbackUrl: '/'
+        });
 
-    if (result?.ok) {
-      // Fetch the session to get the pubkey and privkey
-      const session = await getSession()
-      if (session?.pubkey && session?.privkey) {
-        localStorage.setItem('anonymousPubkey', session.pubkey)
-        localStorage.setItem('anonymousPrivkey', session.privkey)
-        router.push('/')
-      } else {
-        console.error("Pubkey or privkey not found in session")
-      }
-      // Redirect or update UI as needed
-    } else {
-      // Handle error
-      console.error("Anonymous login failed:", result?.error)
+        if (result?.ok) {
+            // Wait a moment for the session to be updated
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Fetch the session
+            const session = await getSession();
+            
+            if (session?.user?.pubkey && session?.user?.privkey) {
+                localStorage.setItem('anonymousPubkey', session.user.pubkey);
+                localStorage.setItem('anonymousPrivkey', session.user.privkey);
+                router.push('/');
+            } else {
+                console.error("Session data incomplete:", session);
+            }
+        } else {
+            console.error("Anonymous login failed:", result?.error);
+        }
+    } catch (error) {
+        console.error("Sign in error:", error);
     }
-  }
+  };
+
+  useEffect(() => {
+    // Redirect if already signed in
+    if (session?.user) {
+        router.push('/');
+    }
+  }, [session, router]);
 
   return (
     <div className="w-[100vw] min-bottom-bar:w-[86vw] mx-auto mt-24 flex flex-col justify-center">

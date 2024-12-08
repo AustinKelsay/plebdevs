@@ -134,7 +134,7 @@ const UserProfile = () => {
                         </h3>
                     )}
                     {account && account?.provider === "github" ? (
-                        <CombinedContributionChart username={user.username} session={session} />
+                        <CombinedContributionChart username={user.username || user.name} session={session} />
                     ) : (
                         <ActivityContributionChart session={session} />
                     )}

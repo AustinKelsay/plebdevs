@@ -247,11 +247,43 @@ export const authOptions = {
             }
             return session;
         },
-        async jwt({ token, user, account }) {
+        async jwt({ token, user, account, profile }) {
+            // If we are linking a github account to an existing email or anon account (we have privkey)
+            if (account?.provider === "github" && user?.id && user?.pubkey && user?.privkey) {
+                console.log("Linking GitHub account to existing user", account, profile);
+                try {
+                    // First update the user's profile with GitHub info
+                    const updatedUser = await updateUser(user.id, {
+                        name: profile?.login || profile?.name,
+                        username: profile?.login || profile?.name,
+                        avatar: profile?.avatar_url,
+                        image: profile?.avatar_url,
+                    });
+
+                    console.log("Updated user", updatedUser);
+
+                    // Get the updated user
+                    const existingUser = await getUserById(updatedUser?.id);
+                    if (existingUser) {
+                        token.user = existingUser;
+                    }
+                } catch (error) {
+                    console.error("Error linking GitHub account:", error);
+                }
+            }
+
+            // If we are linking a github account to a nostr account (we do not have privkey)
+            if (account?.provider === "github" && account?.userId && account?.pubkey) {
+                try {
+                    // I think we just need auth + account in session and thats it?
+                } catch (error) {
+                    console.error("Error linking GitHub account:", error);
+                }
+            }
+
             if (user) {
                 token.user = user;
             }
-            // Also store the account info in the token if it exists
             if (account) {
                 token.account = account;
             }

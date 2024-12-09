@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ProgressBar } from 'primereact/progressbar';
 import { Accordion, AccordionTab } from 'primereact/accordion';
-import { useSession, signIn } from 'next-auth/react';
+import { useSession, signIn, getSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 import GenericButton from '@/components/buttons/GenericButton';
 
 const allTasks = [
@@ -54,6 +55,7 @@ const UserProgress = () => {
     const [completedCourses, setCompletedCourses] = useState([]);
     const [tasks, setTasks] = useState([]);
 
+    const router = useRouter();
     const { data: session, update } = useSession();
 
     useEffect(() => {
@@ -78,10 +80,10 @@ const UserProgress = () => {
             if (task.status === 'Connect GitHub') {
                 return {
                     ...task,
-                    completed: session?.githubProfile ? true : false,
+                    completed: session?.account?.provider === 'github' ? true : false,
                     subTasks: task.subTasks ? task.subTasks.map(subTask => ({
                         ...subTask,
-                        completed: session?.githubProfile ? true : false
+                        completed: session?.account?.provider === 'github' ? true : false
                     })) : undefined
                 };
             }
@@ -102,7 +104,7 @@ const UserProgress = () => {
     const calculateProgress = (completedCourseIds) => {
         let progressValue = 0;
 
-        if (session?.githubProfile) {
+        if (session?.account?.provider === 'github') {
             progressValue += 25;
         }
 
@@ -125,7 +127,7 @@ const UserProgress = () => {
             tier = 'Junior Dev';
         } else if (completedCourseIds.includes("f6daa88a-53d6-4901-8dbd-d2203a05b7ab")) {
             tier = 'New Dev';
-        } else if (session?.githubProfile) {
+        } else if (session?.account?.provider === 'github') {
             tier = 'Pleb';
         }
 
@@ -140,9 +142,32 @@ const UserProgress = () => {
     };
 
     const handleGitHubLink = async () => {
-        if (!session?.user?.id) return;
-        
-        await signIn("github");
+        try {
+            // If user is already signed in, we'll link the accounts
+            if (session?.user) {
+              const result = await signIn("github", { 
+                redirect: false,
+                // Pass existing user data for linking
+                userId: session.user.id,
+                pubkey: session.user.pubkey,
+                privkey: session.user.privkey
+              });
+      
+              if (result?.ok) {
+                // Wait for session update
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const updatedSession = await getSession();
+                if (updatedSession?.account?.provider === 'github') {
+                  router.push('/'); // Accounts linked successfully
+                }
+              }
+            } else {
+              // Normal GitHub sign in
+              await signIn("github");
+            }
+          } catch (error) {
+            console.error("GitHub sign in error:", error);
+        }
     };
 
     return (

@@ -20,8 +20,29 @@ const octokit = new ThrottledOctokit({
   },
 });
 
-export async function* getAllCommits(username, since) {
-    // Create time windows of 1 month each
+export async function* getAllCommits(accessToken, since) {
+    const auth = accessToken || process.env.NEXT_PUBLIC_GITHUB_ACCESS_KEY;
+    
+    const octokit = new ThrottledOctokit({
+        auth,
+        throttle: {
+            onRateLimit: (retryAfter, options, octokit, retryCount) => {
+                octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
+                if (retryCount < 2) {
+                    octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+                    return true;
+                }
+            },
+            onSecondaryRateLimit: (retryAfter, options, octokit) => {
+                octokit.log.warn(`Secondary rate limit hit for request ${options.method} ${options.url}`);
+                return true;
+            },
+        },
+    });
+
+    // First, get the authenticated user's information
+    const { data: user } = await octokit.users.getAuthenticated();
+
     const endDate = new Date();
     let currentDate = new Date(since);
     
@@ -29,7 +50,6 @@ export async function* getAllCommits(username, since) {
         let nextDate = new Date(currentDate);
         nextDate.setMonth(nextDate.getMonth() + 1);
         
-        // If next date would be in the future, use current date instead
         if (nextDate > endDate) {
             nextDate = endDate;
         }
@@ -39,7 +59,7 @@ export async function* getAllCommits(username, since) {
         while (true) {
             try {
                 const { data } = await octokit.search.commits({
-                    q: `author:${username} committer-date:${currentDate.toISOString().split('T')[0]}..${nextDate.toISOString().split('T')[0]}`,
+                    q: `author:${user.login} committer-date:${currentDate.toISOString().split('T')[0]}..${nextDate.toISOString().split('T')[0]}`,
                     per_page: 100,
                     page,
                 });
@@ -58,7 +78,6 @@ export async function* getAllCommits(username, since) {
             }
         }
 
-        // Move to next time window
         currentDate = nextDate;
     }
 }

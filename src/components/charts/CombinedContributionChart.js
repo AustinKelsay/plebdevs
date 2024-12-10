@@ -3,7 +3,7 @@ import { useFetchGithubCommits } from '@/hooks/githubQueries/useFetchGithubCommi
 import { Tooltip } from 'primereact/tooltip';
 import { formatDateTime } from "@/utils/time";
 
-const CombinedContributionChart = ({ username, session }) => {
+const CombinedContributionChart = ({ session }) => {
     const [contributionData, setContributionData] = useState({});
     const [totalContributions, setTotalContributions] = useState(0);
 
@@ -88,7 +88,7 @@ const CombinedContributionChart = ({ username, session }) => {
         setTotalContributions(totalCommits + Object.values(activityData).reduce((a, b) => a + b, 0));
     }, [prepareProgressData]);
 
-    const { data, isLoading, isFetching } = useFetchGithubCommits(username, handleNewCommit);
+    const { data, isLoading, isFetching } = useFetchGithubCommits(session, handleNewCommit);
 
     // Initialize from cached data if available
     useEffect(() => {

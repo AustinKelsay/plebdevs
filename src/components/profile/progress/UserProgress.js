@@ -148,9 +148,9 @@ const UserProgress = () => {
               const result = await signIn("github", { 
                 redirect: false,
                 // Pass existing user data for linking
-                userId: session.user.id,
-                pubkey: session.user.pubkey,
-                privkey: session.user.privkey
+                userId: session?.user?.id,
+                pubkey: session?.user?.pubkey,
+                privkey: session?.user?.privkey || null
               });
       
               if (result?.ok) {

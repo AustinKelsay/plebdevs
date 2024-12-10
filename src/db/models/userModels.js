@@ -20,6 +20,11 @@ export const getAllUsers = async () => {
           lesson: true,
         },
       },
+      userBadges: {
+        include: {
+          badge: true
+        }
+      }
     },
   });
 };
@@ -47,6 +52,11 @@ export const getUserById = async (id) => {
       },
       nip05: true,
       lightningAddress: true,
+      userBadges: {
+        include: {
+          badge: true
+        }
+      }
     },
   });
 };
@@ -74,6 +84,11 @@ export const getUserByPubkey = async (pubkey) => {
       },
       nip05: true,
       lightningAddress: true,
+      userBadges: {
+        include: {
+          badge: true
+        }
+      }
     },
   });
 }
@@ -265,6 +280,11 @@ export const getUserByEmail = async (email) => {
                 },
                 nip05: true,
                 lightningAddress: true,
+                userBadges: {
+                    include: {
+                        badge: true
+                    }
+                }
             },
         });
     } catch (error) {

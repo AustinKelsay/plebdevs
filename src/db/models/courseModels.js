@@ -13,6 +13,7 @@ export const getAllCourses = async () => {
                 }
             },
             purchases: true,
+            badge: true
         },
     });
 };
@@ -31,30 +32,41 @@ export const getCourseById = async (id) => {
                 }
             },
             purchases: true,
+            badge: true
         },
     });
 };
 
 export const createCourse = async (data) => {
+    const { badge, ...courseData } = data;
     return await prisma.course.create({
         data: {
-            id: data.id,
-            noteId: data.noteId,
-            price: data.price,
-            user: { connect: { id: data.user.connect.id } },
+            id: courseData.id,
+            noteId: courseData.noteId,
+            price: courseData.price,
+            user: { connect: { id: courseData.user.connect.id } },
             lessons: {
-                connect: data.lessons.connect
-            }
+                connect: courseData.lessons.connect
+            },
+            ...(badge && {
+                badge: {
+                    create: {
+                        name: badge.name,
+                        noteId: badge.noteId
+                    }
+                }
+            })
         },
         include: {
             lessons: true,
-            user: true
+            user: true,
+            badge: true
         }
     });
 };
 
 export const updateCourse = async (id, data) => {
-    const { lessons, ...otherData } = data;
+    const { lessons, badge, ...otherData } = data;
     return await prisma.course.update({
         where: { id },
         data: {
@@ -66,7 +78,21 @@ export const updateCourse = async (id, data) => {
                     draftId: lesson.draftId || null,
                     index: index
                 }))
-            }
+            },
+            ...(badge && {
+                badge: {
+                    upsert: {
+                        create: {
+                            name: badge.name,
+                            noteId: badge.noteId
+                        },
+                        update: {
+                            name: badge.name,
+                            noteId: badge.noteId
+                        }
+                    }
+                }
+            })
         },
         include: {
             lessons: {
@@ -77,12 +103,17 @@ export const updateCourse = async (id, data) => {
                 orderBy: {
                     index: 'asc'
                 }
-            }
+            },
+            badge: true
         }
     });
 };
 
 export const deleteCourse = async (id) => {
+    await prisma.badge.deleteMany({
+        where: { courseId: id }
+    });
+    
     return await prisma.course.delete({
         where: { id },
     });

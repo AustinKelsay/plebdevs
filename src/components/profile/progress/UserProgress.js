@@ -4,6 +4,7 @@ import { Accordion, AccordionTab } from 'primereact/accordion';
 import { useSession, signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import GenericButton from '@/components/buttons/GenericButton';
+import UserBadges from '@/components/profile/UserBadges';
 
 const allTasks = [
     {
@@ -12,14 +13,13 @@ const allTasks = [
         tier: 'Pleb', 
         courseId: null,
         subTasks: [
-            { status: 'Create First GitHub Repo', completed: false },
-            { status: 'Push Commit', completed: false }
+            { status: 'Create Your First GitHub Repo', completed: false },
         ]
     },
     {
         status: 'PlebDevs Starter',
         completed: false,
-        tier: 'New Dev',
+        tier: 'Plebdev',
         // courseId: "f538f5c5-1a72-4804-8eb1-3f05cea64874",
         courseId: "f6daa88a-53d6-4901-8dbd-d2203a05b7ab",
         subTasks: [
@@ -29,7 +29,7 @@ const allTasks = [
     {
         status: 'Frontend Course',
         completed: false,
-        tier: 'Junior Dev',
+        tier: 'Frontend Dev',
         courseId: 'f73c37f4-df2e-4f7d-a838-dce568c76136',
         subTasks: [
             { status: 'Complete the course', completed: false },
@@ -39,7 +39,7 @@ const allTasks = [
     {
         status: 'Backend Course',
         completed: false,
-        tier: 'Plebdev',
+        tier: 'Backend Dev',
         courseId: 'f6825391-831c-44da-904a-9ac3d149b7be',
         subTasks: [
             { status: 'Complete the course', completed: false },
@@ -54,6 +54,7 @@ const UserProgress = () => {
     const [expandedItems, setExpandedItems] = useState({});
     const [completedCourses, setCompletedCourses] = useState([]);
     const [tasks, setTasks] = useState([]);
+    const [showBadges, setShowBadges] = useState(false);
 
     const router = useRouter();
     const { data: session, update } = useSession();
@@ -122,11 +123,11 @@ const UserProgress = () => {
         let tier = null;
 
         if (completedCourseIds.includes("f6825391-831c-44da-904a-9ac3d149b7be")) {
-            tier = 'Plebdev';
+            tier = 'Backend Dev';
         } else if (completedCourseIds.includes("f73c37f4-df2e-4f7d-a838-dce568c76136")) {
-            tier = 'Junior Dev';
+            tier = 'Frontend Dev';
         } else if (completedCourseIds.includes("f6daa88a-53d6-4901-8dbd-d2203a05b7ab")) {
-            tier = 'New Dev';
+            tier = 'Plebdev';
         } else if (session?.account?.provider === 'github') {
             tier = 'Pleb';
         }
@@ -220,7 +221,7 @@ const UserProgress = () => {
                                             )}
                                             <span className={`text-lg ${task.completed ? 'text-white' : 'text-gray-400'}`}>{task.status}</span>
                                         </div>
-                                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full w-20 text-center">
+                                        <span className="bg-blue-500 text-white text-sm px-2 py-1 rounded-full w-24 text-center">
                                             {task.tier}
                                         </span>
                                     </div>
@@ -277,9 +278,17 @@ const UserProgress = () => {
                 ))}
             </ul>
 
-            <button className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold">
-                View Badges (Coming Soon)
+            <button 
+                className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold"
+                onClick={() => setShowBadges(true)}
+            >
+                View Badges
             </button>
+
+            <UserBadges 
+                visible={showBadges}
+                onHide={() => setShowBadges(false)}
+            />
         </div>
     );
 };

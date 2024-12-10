@@ -1,13 +1,13 @@
-// datasource db {
-//     provider = "postgresql"
-//     url      = env("DATABASE_URL")
-// }
-
 datasource db {
-  provider = "postgresql"
-  url = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
+
+// datasource db {
+//   provider = "postgresql"
+//   url = env("POSTGRES_PRISMA_URL")
+//   directUrl = env("POSTGRES_URL_NON_POOLING")
+// }
 
 generator client {
     provider = "prisma-client-js"
@@ -38,6 +38,7 @@ model User {
     userCourses      UserCourse[]
     nip05            Nip05?
     lightningAddress LightningAddress?
+    userBadges       UserBadge[]
 }
 
 model Session {
@@ -132,6 +133,7 @@ model Course {
     createdAt   DateTime     @default(now())
     updatedAt   DateTime     @updatedAt
     userCourses UserCourse[]
+    badge       Badge?
 }
 
 model CourseDraft {
@@ -246,4 +248,26 @@ model LightningAddress {
     lndCert         String?
     lndHost         String
     lndPort         String  @default("8080")
+}
+
+model Badge {
+    id          String       @id @default(uuid())
+    name        String
+    noteId      String       @unique
+    courseId    String       @unique  // One badge per course
+    course      Course       @relation(fields: [courseId], references: [id])
+    userBadges  UserBadge[] // Many users can have this badge
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+}
+
+model UserBadge {
+    id        String   @id @default(uuid())
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+    badgeId   String
+    badge     Badge    @relation(fields: [badgeId], references: [id])
+    awardedAt DateTime @default(now())
+
+    @@unique([userId, badgeId]) // Each user can only have one of each badge
 }

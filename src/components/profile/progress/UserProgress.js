@@ -5,6 +5,7 @@ import { useSession, signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import GenericButton from '@/components/buttons/GenericButton';
 import UserBadges from '@/components/profile/UserBadges';
+import UserProgressFlow from './UserProgressFlow';
 
 const allTasks = [
     {
@@ -21,7 +22,7 @@ const allTasks = [
         completed: false,
         tier: 'Plebdev',
         // courseId: "f538f5c5-1a72-4804-8eb1-3f05cea64874",
-        courseId: "f6daa88a-53d6-4901-8dbd-d2203a05b7ab",
+        courseId: "5664e78f-c618-410d-a7cc-f3393b021fdf",
         subTasks: [
             { status: 'Complete the course', completed: false },
         ]
@@ -172,7 +173,7 @@ const UserProgress = () => {
     };
 
     return (
-        <div className="bg-gray-800 rounded-3xl p-6 w-[500px] max-mob:w-full max-tab:w-full mx-auto my-8">
+        <div className="bg-gray-800 rounded-3xl p-6 w-[940px] max-mob:w-full max-tab:w-full mx-auto my-8">
             <h1 className="text-3xl font-bold text-white mb-2">Dev Journey</h1>
             <p className="text-gray-400 mb-4">Track your progress from Pleb to Plebdev</p>
 
@@ -197,6 +198,10 @@ const UserProgress = () => {
                         Not Started
                     </span>
                 )}
+            </div>
+
+            <div className="mb-6">
+                <UserProgressFlow tasks={tasks} />
             </div>
 
             <ul className="space-y-4 mb-6">

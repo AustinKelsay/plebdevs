@@ -3,7 +3,7 @@ const removeImports = require("next-remove-imports")();
 module.exports = removeImports({
   reactStrictMode: true,
   images: {
-    domains: ['localhost', 'secure.gravatar.com', 'plebdevs-three.vercel.app', 'plebdevs.com', 'plebdevs-bucket.nyc3.cdn.digitaloceanspaces.com'],
+    domains: ['localhost', 'secure.gravatar.com', 'plebdevs-three.vercel.app', 'plebdevs.com', 'plebdevs-bucket.nyc3.cdn.digitaloceanspaces.com', 'avatars.githubusercontent.com'],
   },
   webpack(config, options) {
     return config;

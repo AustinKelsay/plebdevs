@@ -145,3 +145,7 @@ code {
   }
 }
 
+/* hide attribution */
+div.react-flow__attribution {
+  display: none !important;
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import Image from 'next/image';
+import { signIn } from 'next-auth/react';
 import { useImageProxy } from '@/hooks/useImageProxy';
 import { useRouter } from 'next/router';
 import { Avatar } from 'primereact/avatar';
@@ -125,24 +126,29 @@ const HeroBanner = () => {
                 </div>
                 <div className="space-x-4">
                     <GenericButton
-                        label="Learn"
+                        label="Learn How to Code"
                         icon={<i className="pi pi-book pr-2 text-2xl" />}
                         rounded
                         severity="info"
                         className="border-2"
                         size={isMobile ? null : "large"}
                         outlined
-                        onClick={() => router.push('/content?tag=all')}
+                        onClick={() => signIn('anonymous', { 
+                            callbackUrl: '/profile',
+                            redirect: true,
+                            pubkey: null,
+                            privkey: null
+                        })}
                     />
                     <GenericButton
-                        label="Connect"
+                        label="Level Up"
                         icon={<i className="pi pi-users pr-2 text-2xl" />}
                         rounded
                         size={isMobile ? null : "large"}
                         severity="success"
                         className="border-2"
                         outlined
-                        onClick={() => router.push('/feed?channel=global')}
+                        onClick={() => router.push('/content?tag=all')}
                     />
                 </div>
             </div>

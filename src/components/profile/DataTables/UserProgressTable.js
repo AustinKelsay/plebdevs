@@ -107,12 +107,18 @@ const UserProgressTable = ({ session, ndk, windowWidth }) => {
         </div>
     );
 
-    const dateTemplate = (rowData) => (
-        <div className="flex items-center gap-2">
-            <i className="pi pi-calendar text-gray-400"></i>
-            <span>{formatDateTime(rowData.date)}</span>
-        </div>
-    );
+    const dateTemplate = (rowData) => {
+        // Adjust for timezone offset like in the contribution chart
+        const date = new Date(rowData.date);
+        const adjustedDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        
+        return (
+            <div className="flex items-center gap-2">
+                <i className="pi pi-calendar text-gray-400"></i>
+                <span>{formatDateTime(adjustedDate)}</span>
+            </div>
+        );
+    };
 
     if (!session || !session?.user || !ndk) {
         return <div className='w-full h-full flex items-center justify-center'><ProgressSpinner /></div>;

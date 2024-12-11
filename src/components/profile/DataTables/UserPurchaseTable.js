@@ -34,12 +34,18 @@ const UserPurchaseTable = ({ session, windowWidth }) => {
         </div>
     );
 
-    const dateTemplate = (rowData) => (
-        <div className="flex items-center gap-2">
-            <i className="pi pi-calendar text-gray-400"></i>
-            <span>{formatDateTime(rowData?.createdAt)}</span>
-        </div>
-    );
+    const dateTemplate = (rowData) => {
+        // Adjust for timezone offset like in the contribution chart
+        const date = new Date(rowData?.createdAt);
+        const adjustedDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        
+        return (
+            <div className="flex items-center gap-2">
+                <i className="pi pi-calendar text-gray-400"></i>
+                <span>{formatDateTime(adjustedDate)}</span>
+            </div>
+        );
+    };
 
     return (
         session && session?.user && (

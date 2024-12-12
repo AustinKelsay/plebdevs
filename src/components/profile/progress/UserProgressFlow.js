@@ -3,19 +3,20 @@ import ReactFlow, {
     Background,
     Handle,
     Position,
+    Controls
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 const CustomNode = ({ data }) => (
     <div className={`px-4 py-2 rounded-lg shadow-md w-48 text-center transition-all duration-300 ${
         data.completed 
-            ? 'bg-green-500 text-white border-2 border-green-400' 
-            : 'bg-gray-700 text-gray-300 border-2 border-gray-600'
+            ? 'bg-green-500 text-white border-2 border-green-400 bg-opacity-50' 
+            : 'bg-gray-700 text-gray-300 border-2 border-gray-600 bg-opacity-50'
     }`}>
         <Handle type="target" position={Position.Top} />
         <div className="flex items-center justify-center gap-2">
             {data.completed ? (
-                <div className="w-5 h-5 bg-green-400 rounded-full flex items-center justify-center">
+                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                     <i className="pi pi-check text-white text-sm"></i>
                 </div>
             ) : (
@@ -37,6 +38,13 @@ const nodeTypes = {
 };
 
 const UserProgressFlow = ({ tasks }) => {
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
     const nodes = [
         {
             id: '1',
@@ -113,6 +121,8 @@ const UserProgressFlow = ({ tasks }) => {
         },
     ];
 
+    if (!mounted) return <div style={{ height: 400 }} className="bg-gray-800 rounded-3xl" />;
+
     return (
         <div style={{ height: 400 }} className="bg-gray-800 rounded-3xl">
             <ReactFlow
@@ -120,16 +130,20 @@ const UserProgressFlow = ({ tasks }) => {
                 edges={edges}
                 nodeTypes={nodeTypes}
                 fitView
-                preventScrolling
-                zoomOnScroll={false}
-                panOnScroll={false}
                 nodesDraggable={false}
                 nodesConnectable={false}
                 elementsSelectable={false}
-                minZoom={0.5}
-                maxZoom={2}
+                panOnDrag={false}
+                zoomOnScroll={false}
+                panOnScroll={false}
+                selectNodesOnDrag={false}
+                preventScrolling
+                minZoom={1}
+                maxZoom={1}
+                defaultViewport={{ x: 0, y: 0, zoom: 1 }}
             >
                 <Background color="#4a5568" gap={16} />
+                {/* <Controls position="top-right" /> */}
             </ReactFlow>
         </div>
     );

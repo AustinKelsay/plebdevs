@@ -157,70 +157,75 @@ const ActivityContributionChart = ({ session }) => {
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
-        <div className="mx-auto py-2 px-8 max-w-[1000px] bg-gray-800 rounded-lg">
-            <div className="flex justify-between items-center mb-3">
-                <h4 className="text-base font-semibold text-gray-200">
-                    {totalActivities} learning activities in the last year
-                </h4>
-                <i className="pi pi-question-circle text-lg cursor-pointer text-gray-400 hover:text-gray-200" 
-                   data-pr-tooltip="Total number of learning activities on the platform" />
-                <Tooltip target=".pi-question-circle" position="top" />
+        <div className="w-full mx-2 bg-gray-800 rounded-lg border border-gray-700 shadow-md">
+            <div className="flex flex-row justify-between items-center p-4">
+                <h1 className="text-2xl font-bold text-gray-200">Activity</h1>
+                <i className="pi pi-question-circle text-2xl cursor-pointer text-gray-200"
+                    data-pr-tooltip="Total number of learning activities on the platform" />
+                <Tooltip target=".pi-question-circle" position="left" />
             </div>
-            <div className="flex">
-                {/* Days of week labels */}
-                <div className="flex flex-col gap-[3px] text-[11px] text-gray-400 pr-3">
-                    {weekDays.map((day, index) => (
-                        <div key={day} className="h-[13px] leading-[13px]">
-                            {index % 2 === 0 && day}
+            <div className="max-w-[910px] p-4">
+                <div className="flex justify-between items-center mb-3">
+                    <h4 className="text-base font-semibold text-gray-200">
+                        {totalActivities} learning activities in the last year
+                    </h4>
+                </div>
+                <div className="flex">
+                    {/* Days of week labels */}
+                    <div className="flex flex-col gap-[3px] text-[11px] text-gray-400 pr-3">
+                        {weekDays.map((day, index) => (
+                            <div key={day} className="h-[14px] leading-[14px]">
+                                {index % 2 === 0 && day}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex flex-col">
+                        {/* Calendar grid */}
+                        <div className="flex gap-[3px]">
+                            {calendar[0].map((_, weekIndex) => (
+                                <div key={weekIndex} className="flex flex-col gap-[3px]">
+                                    {calendar.map((row, dayIndex) => (
+                                        row[weekIndex] && (
+                                            <div
+                                                key={`${weekIndex}-${dayIndex}`}
+                                                className={`w-[14px] h-[14px] ${getColor(row[weekIndex].count)} rounded-[2px] cursor-pointer transition-colors duration-100`}
+                                                title={`${row[weekIndex].date.toDateString()}: ${
+                                                    row[weekIndex].count > 0 
+                                                        ? `${row[weekIndex].count} activit${row[weekIndex].count !== 1 ? 'ies' : 'y'}`
+                                                        : 'No activities'
+                                                }`}
+                                            ></div>
+                                        )
+                                    ))}
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                        {/* Month labels */}
+                        <div className="flex text-[11px] text-gray-400 h-[20px] mt-1">
+                            {getMonthLabels().map((month, index) => (
+                                <div
+                                    key={index}
+                                    className="absolute"
+                                    style={{ marginLeft: `${month.index * 15}px` }}
+                                >
+                                    {month.name}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-                <div className="flex flex-col">
-                    {/* Calendar grid */}
+                {/* Legend */}
+                <div className="text-[11px] text-gray-400 flex items-center justify-end">
+                    <span className="mr-2">Less</span>
                     <div className="flex gap-[3px]">
-                        {calendar[0].map((_, weekIndex) => (
-                            <div key={weekIndex} className="flex flex-col gap-[3px]">
-                                {calendar.map((row, dayIndex) => (
-                                    row[weekIndex] && (
-                                        <div
-                                            key={`${weekIndex}-${dayIndex}`}
-                                            className={`w-[13px] h-[13px] ${getColor(row[weekIndex].count)} rounded-[2px] cursor-pointer transition-colors duration-100`}
-                                            title={`${row[weekIndex].date.toDateString()}: ${
-                                                row[weekIndex].count > 0 
-                                                    ? `${row[weekIndex].count} activit${row[weekIndex].count !== 1 ? 'ies' : 'y'}`
-                                                    : 'No activities'
-                                            }`}
-                                        ></div>
-                                    )
-                                ))}
-                            </div>
-                        ))}
+                        <div className="w-[14px] h-[14px] bg-gray-100 rounded-[2px]"></div>
+                        <div className="w-[14px] h-[14px] bg-green-300 rounded-[2px]"></div>
+                        <div className="w-[14px] h-[14px] bg-green-400 rounded-[2px]"></div>
+                        <div className="w-[14px] h-[14px] bg-green-600 rounded-[2px]"></div>
+                        <div className="w-[14px] h-[14px] bg-green-700 rounded-[2px]"></div>
                     </div>
-                    {/* Month labels */}
-                    <div className="flex text-[11px] text-gray-400 h-[20px] mt-1">
-                        {getMonthLabels().map((month, index) => (
-                            <div
-                                key={index}
-                                className="absolute"
-                                style={{ marginLeft: `${month.index * 15}px` }}
-                            >
-                                {month.name}
-                            </div>
-                        ))}
-                    </div>
+                    <span className="ml-2">More</span>
                 </div>
-            </div>
-            {/* Legend */}
-            <div className="text-[11px] text-gray-400 flex items-center justify-end">
-                <span className="mr-2">Less</span>
-                <div className="flex gap-[3px]">
-                    <div className="w-[13px] h-[13px] bg-gray-100 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-green-300 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-green-400 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-green-600 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-green-700 rounded-[2px]"></div>
-                </div>
-                <span className="ml-2">More</span>
             </div>
         </div>
     );

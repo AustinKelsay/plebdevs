@@ -37,24 +37,27 @@ const UserProfile = () => {
                         <h1 className="text-3xl font-bold mb-6">Profile</h1>
                     )
                 }
-                <div className="w-full flex flex-col justify-center mx-auto">
+                <div className="w-full flex flex-row">
                     <UserProfileCard user={user} />
-                    {account && account?.provider === "github" ? (
-                        <CombinedContributionChart session={session} />
-                    ) : (
-                        <ActivityContributionChart session={session} />
-                    )}
-                    <UserProgress />
+                    <div className="w-full flex flex-col justify-center mx-auto">
+
+                        {account && account?.provider === "github" ? (
+                            <CombinedContributionChart session={session} />
+                        ) : (
+                            <ActivityContributionChart session={session} />
+                        )}
+                        <UserProgress />
+                        <UserProgressTable
+                            session={session}
+                            ndk={ndk}
+                            windowWidth={windowWidth}
+                        />
+                        <UserPurchaseTable
+                            session={session}
+                            windowWidth={windowWidth}
+                        />
+                    </div>
                 </div>
-                    <UserProgressTable
-                        session={session}
-                        ndk={ndk}
-                        windowWidth={windowWidth}
-                    />
-                    <UserPurchaseTable
-                        session={session}
-                        windowWidth={windowWidth}
-                    />
             </div>
         )
     );

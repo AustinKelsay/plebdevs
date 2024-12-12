@@ -53,7 +53,7 @@ const UserPurchaseTable = ({ session, windowWidth }) => {
                 emptyMessage="No purchases"
                 value={session.user?.purchased}
                 header={purchasesHeader}
-                style={{ maxWidth: windowWidth < 768 ? "100%" : "90%", margin: "0 auto", marginTop: "2rem" }}
+                style={{ margin: 8, width: "100%", borderRadius: "8px", border: "1px solid #333", boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)" }}
                 pt={{
                     wrapper: {
                         className: "rounded-b-lg shadow-md"

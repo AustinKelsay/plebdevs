@@ -231,7 +231,8 @@ export const authOptions = {
                     purchased: fullUser.purchased,
                     nip05: fullUser.nip05,
                     lightningAddress: fullUser.lightningAddress,
-                    githubUsername: token.githubUsername
+                    githubUsername: token.githubUsername,
+                    createdAt: fullUser.createdAt
                 };
 
                 // Add GitHub account info to session if it exists
@@ -249,7 +250,6 @@ export const authOptions = {
             return session;
         },
         async jwt({ token, user, account, profile, session }) {
-            console.log("JWT", token, user, account, profile, session);
             // If we are linking a github account to an existing email or anon account (we have privkey)
             if (account?.provider === "github" && user?.id && user?.pubkey && user?.privkey) {
                 try {

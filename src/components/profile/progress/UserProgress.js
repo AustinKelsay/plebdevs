@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import GenericButton from '@/components/buttons/GenericButton';
 import UserBadges from '@/components/profile/UserBadges';
 import UserProgressFlow from './UserProgressFlow';
+import { Tooltip } from 'primereact/tooltip';
 
 const allTasks = [
     {
@@ -56,12 +57,14 @@ const UserProgress = () => {
     const [completedCourses, setCompletedCourses] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [showBadges, setShowBadges] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const router = useRouter();
     const { data: session, update } = useSession();
 
     useEffect(() => {
         if (session?.user) {
+            setIsLoading(true);
             const user = session.user;
             const ids = user?.userCourses?.map(course => course?.completed ? course.courseId : null).filter(id => id !== null);
             if (ids && ids.length > 0) {
@@ -74,6 +77,7 @@ const UserProgress = () => {
                 calculateProgress([]);
                 calculateCurrentTier([]);
             }
+            setIsLoading(false);
         }
     }, [session]);
 
@@ -173,8 +177,13 @@ const UserProgress = () => {
     };
 
     return (
-        <div className="bg-gray-800 rounded-3xl p-6 w-[940px] max-mob:w-full max-tab:w-full mx-auto my-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Dev Journey</h1>
+        <div className="bg-gray-800 rounded-lg p-4 m-2 w-full border border-gray-700 shadow-md">
+            <div className="flex flex-row justify-between items-center">
+                <h1 className="text-3xl font-bold text-white mb-2">Dev Journey</h1>
+                <i className="pi pi-question-circle text-2xl cursor-pointer text-gray-200"
+                    data-pr-tooltip="Track your progress from Pleb to Plebdev" />
+                <Tooltip target=".pi-question-circle" position="left" />
+            </div>
             <p className="text-gray-400 mb-4">Track your progress from Pleb to Plebdev</p>
 
             <div className="flex justify-between items-center mb-2">
@@ -200,88 +209,98 @@ const UserProgress = () => {
                 )}
             </div>
 
-            <div className="mb-6">
-                <UserProgressFlow tasks={tasks} />
-            </div>
-
-            <ul className="space-y-4 mb-6">
-                {tasks.map((task, index) => (
-                    <li key={index}>
-                        <Accordion 
-                            activeIndex={expandedItems[index] ? 0 : null}
-                            onTabChange={(e) => handleAccordionChange(index, e.index === 0)}
-                        >
-                            <AccordionTab
-                                header={
-                                    <div className="flex items-center justify-between w-full">
-                                        <div className="flex items-center">
-                                            {task.completed ? (
-                                                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                                                    <i className="pi pi-check text-white text-lg"></i>
+            <div className="flex gap-6 mb-6">
+                <div className="w-1/2">
+                    <ul className="space-y-6 pt-2">
+                        {tasks.map((task, index) => (
+                            <li key={index}>
+                                <Accordion 
+                                    activeIndex={expandedItems[index] ? 0 : null}
+                                    onTabChange={(e) => handleAccordionChange(index, e.index === 0)}
+                                >
+                                    <AccordionTab
+                                        header={
+                                            <div className="flex items-center justify-between w-full">
+                                                <div className="flex items-center">
+                                                    {task.completed ? (
+                                                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                                                            <i className="pi pi-check text-white text-lg"></i>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center mr-3">
+                                                            <i className="pi pi-info-circle text-white text-lg"></i>
+                                                        </div>
+                                                    )}
+                                                    <span className={`text-lg ${task.completed ? 'text-white' : 'text-gray-400'}`}>{task.status}</span>
                                                 </div>
-                                            ) : (
-                                                <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center mr-3">
-                                                    <i className="pi pi-info-circle text-white text-lg"></i>
-                                                </div>
-                                            )}
-                                            <span className={`text-lg ${task.completed ? 'text-white' : 'text-gray-400'}`}>{task.status}</span>
-                                        </div>
-                                        <span className="bg-blue-500 text-white text-sm px-2 py-1 rounded-full w-24 text-center">
-                                            {task.tier}
-                                        </span>
-                                    </div>
-                                }
-                            >
-                                {task.status === 'Connect GitHub' && !task.completed && (
-                                    <div className="mb-4">
-                                        <GenericButton 
-                                            label="Connect GitHub"
-                                            icon="pi pi-github"
-                                            onClick={handleGitHubLink}
-                                            className="w-fit bg-[#24292e] hover:bg-[#2f363d] border border-[#f8f8ff] text-[#f8f8ff] font-semibold" 
-                                            rounded
-                                        />
-                                    </div>
-                                )}
-                                {task.subTasks && (
-                                    <ul className="space-y-2">
-                                        {task.subTasks.map((subTask, subIndex) => (
-                                            <li key={subIndex} className="flex items-center">
-                                                {subTask.completed ? (
-                                                    <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                                                        <i className="pi pi-check text-white text-sm"></i>
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-4 h-4 bg-gray-700 rounded-full flex items-center justify-center mr-3">
-                                                        <i className="pi pi-info-circle text-white text-sm"></i>
-                                                    </div>
-                                                )}
-                                                <span className={`${subTask.completed ? 'text-white' : 'text-gray-400'}`}>
-                                                    {subTask.status}
+                                                <span className="bg-blue-500 text-white text-sm px-2 py-1 rounded-full w-24 text-center">
+                                                    {task.tier}
                                                 </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                                {task.courseId && (
-                                    <div className="mt-2 flex justify-end">
-                                        <GenericButton 
-                                            icon="pi pi-external-link"
-                                            onClick={() => router.push(`/courses/${task.courseId}`)}
-                                            tooltip="View Course"
-                                            tooltipOptions={{
-                                                position: "top"
-                                            }}
-                                            outlined
-                                            size="small"
-                                        />
-                                    </div>
-                                )}
-                            </AccordionTab>
-                        </Accordion>
-                    </li>
-                ))}
-            </ul>
+                                            </div>
+                                        }
+                                    >
+                                        {task.status === 'Connect GitHub' && !task.completed && (
+                                            <div className="mb-4">
+                                                <GenericButton 
+                                                    label="Connect GitHub"
+                                                    icon="pi pi-github"
+                                                    onClick={handleGitHubLink}
+                                                    className="w-fit bg-[#24292e] hover:bg-[#2f363d] border border-[#f8f8ff] text-[#f8f8ff] font-semibold" 
+                                                    rounded
+                                                />
+                                            </div>
+                                        )}
+                                        {task.subTasks && (
+                                            <ul className="space-y-2">
+                                                {task.subTasks.map((subTask, subIndex) => (
+                                                    <li key={subIndex} className="flex items-center pl-[28px]">
+                                                        {subTask.completed ? (
+                                                            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                                                                <i className="pi pi-check text-white text-sm"></i>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-4 h-4 bg-gray-700 rounded-full flex items-center justify-center mr-3">
+                                                                <i className="pi pi-info-circle text-white text-sm"></i>
+                                                            </div>
+                                                        )}
+                                                        <span className={`${subTask.completed ? 'text-white' : 'text-gray-400'}`}>
+                                                            {subTask.status}
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                        {task.courseId && (
+                                            <div className="mt-2 flex justify-end">
+                                                <GenericButton 
+                                                    icon="pi pi-external-link"
+                                                    onClick={() => router.push(`/courses/${task.courseId}`)}
+                                                    tooltip="View Course"
+                                                    tooltipOptions={{
+                                                        position: "top"
+                                                    }}
+                                                    outlined
+                                                    size="small"
+                                                />
+                                            </div>
+                                        )}
+                                    </AccordionTab>
+                                </Accordion>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                <div className="w-1/2">
+                    {isLoading ? (
+                        <div className="h-[400px] bg-gray-800 rounded-3xl flex items-center justify-center">
+                            <i className="pi pi-spin pi-spinner text-4xl text-gray-600"></i>
+                        </div>
+                    ) : (
+                        <UserProgressFlow tasks={tasks} />
+                    )}
+                </div>
+            </div>
 
             <button 
                 className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold"

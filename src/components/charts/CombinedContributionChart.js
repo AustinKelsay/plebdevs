@@ -9,10 +9,10 @@ const CombinedContributionChart = ({ session }) => {
 
     const prepareProgressData = useCallback(() => {
         if (!session?.user?.userCourses) return {};
-        
+
         const activityData = {};
         const allActivities = [];  // Array to store all activities for logging
-        
+
         // Process course activities
         session.user.userCourses.forEach(courseProgress => {
             if (courseProgress.started) {
@@ -74,15 +74,15 @@ const CombinedContributionChart = ({ session }) => {
     const handleNewCommit = useCallback(({ contributionData, totalCommits }) => {
         const activityData = prepareProgressData();
         console.log("GitHub Contribution Data:", contributionData);
-        
+
         // Create a new object with GitHub commits
         const combinedData = { ...contributionData };
-        
+
         // Add activities to the combined data
         Object.entries(activityData).forEach(([date, count]) => {
             combinedData[date] = (combinedData[date] || 0) + count;
         });
-        
+
         console.log("Combined Data:", combinedData);
         setContributionData(combinedData);
         setTotalContributions(totalCommits + Object.values(activityData).reduce((a, b) => a + b, 0));
@@ -95,12 +95,12 @@ const CombinedContributionChart = ({ session }) => {
         if (data && !isLoading) {
             const activityData = prepareProgressData();
             const combinedData = { ...data.contributionData };
-            
+
             // Add activities to the combined data
             Object.entries(activityData).forEach(([date, count]) => {
                 combinedData[date] = (combinedData[date] || 0) + count;
             });
-            
+
             setContributionData(combinedData);
             setTotalContributions(data.totalCommits + Object.values(activityData).reduce((a, b) => a + b, 0));
         }
@@ -117,15 +117,15 @@ const CombinedContributionChart = ({ session }) => {
     const generateCalendar = useCallback(() => {
         const today = new Date();
         today.setHours(23, 59, 59, 999);
-        
+
         // Calculate the start date (52 weeks + remaining days to today)
         const oneYearAgo = new Date(today);
         oneYearAgo.setDate(today.getDate() - 364); // 52 weeks * 7 days = 364 days
-        
+
         // Start from the first Sunday before or on oneYearAgo
         const startDate = new Date(oneYearAgo);
         startDate.setDate(startDate.getDate() - startDate.getDay());
-        
+
         const calendar = [];
         // Create 7 rows for days of the week (Sunday to Saturday)
         for (let i = 0; i < 7; i++) {
@@ -140,14 +140,14 @@ const CombinedContributionChart = ({ session }) => {
             const githubCount = data?.contributionData[dateString] || 0;
             const activityCount = (contributionData[dateString] || 0) - (data?.contributionData[dateString] || 0);
             const totalCount = githubCount + activityCount;
-            
+
             calendar[weekDay].push({
                 date: new Date(currentDate),
                 count: totalCount,
                 githubCount,
                 activityCount
             });
-            
+
             currentDate.setDate(currentDate.getDate() + 1);
         }
 
@@ -181,73 +181,77 @@ const CombinedContributionChart = ({ session }) => {
     }, [calendar]);
 
     return (
-        <div className="mx-auto py-2 px-8 max-w-[1000px] bg-gray-800 rounded-lg">
-            {(isLoading || isFetching) && <p>Loading contribution data... ({totalContributions} total contributions / activities fetched)</p>}
-            {!isLoading && !isFetching && 
-            <div className="flex justify-between items-center mb-3">
-                <h4 className="text-base font-semibold text-gray-200">
-                    {totalContributions} total contributions / activities in the last year
-                </h4>
-                <i className="pi pi-question-circle text-lg cursor-pointer text-gray-400 hover:text-gray-200" 
-                   data-pr-tooltip="Combined total of GitHub commits and learning activities (starting/completing courses and lessons)" />
-                <Tooltip target=".pi-question-circle" position="top" />
+        <div className="w-full mx-2 bg-gray-800 rounded-lg border border-gray-700 shadow-md">
+            <div className="flex flex-row justify-between items-center p-4">
+                <h1 className="text-2xl font-bold text-gray-200">Activity</h1>
+                <i className="pi pi-question-circle text-2xl cursor-pointer text-gray-200"
+                    data-pr-tooltip="Combined total of GitHub commits and learning activities (starting/completing courses and lessons)" />
+                <Tooltip target=".pi-question-circle" position="left" />
             </div>
-            }
-            <div className="flex">
-                {/* Days of week labels */}
-                <div className="flex flex-col gap-[3px] text-[11px] text-gray-400 pr-3">
-                    {weekDays.map((day, index) => (
-                        <div key={day} className="h-[13px] leading-[13px]">
-                            {index % 2 === 0 && day}
-                        </div>
-                    ))}
-                </div>
-                <div className="flex flex-col">
-                    {/* Calendar grid */}
-                    <div className="flex gap-[3px]">
-                        {calendar[0].map((_, weekIndex) => (
-                            <div key={weekIndex} className="flex flex-col gap-[3px]">
-                                {calendar.map((row, dayIndex) => (
-                                    row[weekIndex] && (
-                                        <div
-                                            key={`${weekIndex}-${dayIndex}`}
-                                            className={`w-[13px] h-[13px] ${getColor(row[weekIndex].count)} rounded-[2px] cursor-pointer transition-colors duration-100`}
-                                            title={`${row[weekIndex].date.toDateString()}: ${
-                                                [
+            <div className="max-w-[910px] p-4">
+                {(isLoading || isFetching) && <h4 className="text-base font-semibold text-gray-200 mb-3">Loading contribution data... ({totalContributions} total contributions / activities fetched)</h4>}
+                {!isLoading && !isFetching &&
+                    <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-base font-semibold text-gray-200">
+                            {totalContributions} total contributions / activities in the last year
+                        </h4>
+                    </div>
+                }
+                <div className="flex">
+                    {/* Days of week labels */}
+                    <div className="flex flex-col gap-[3px] text-[11px] text-gray-400 pr-3">
+                        {weekDays.map((day, index) => (
+                            <div key={day} className="h-[13px] leading-[13px]">
+                                {index % 2 === 0 && day}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex flex-col">
+                        {/* Calendar grid */}
+                        <div className="flex gap-[3px]">
+                            {calendar[0].map((_, weekIndex) => (
+                                <div key={weekIndex} className="flex flex-col gap-[3px]">
+                                    {calendar.map((row, dayIndex) => (
+                                        row[weekIndex] && (
+                                            <div
+                                                key={`${weekIndex}-${dayIndex}`}
+                                                className={`w-[14px] h-[14px] ${getColor(row[weekIndex].count)} rounded-[2px] cursor-pointer transition-colors duration-100`}
+                                                title={`${row[weekIndex].date.toDateString()}: ${[
                                                     row[weekIndex].githubCount > 0 ? `${row[weekIndex].githubCount} contribution${row[weekIndex].githubCount !== 1 ? 's' : ''}` : '',
                                                     row[weekIndex].activityCount > 0 ? `${row[weekIndex].activityCount} activit${row[weekIndex].activityCount !== 1 ? 'ies' : 'y'}` : ''
                                                 ].filter(Boolean).join(' & ') || 'No contributions or activities'
-                                            }`}
-                                        ></div>
-                                    )
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-                    {/* Month labels moved to bottom */}
-                    <div className="flex text-[11px] text-gray-400 h-[20px] mt-1">
-                        {getMonthLabels().map((month, index) => (
-                            <div
-                                key={index}
-                                className="absolute"
-                                style={{ marginLeft: `${month.index * 15}px` }}
-                            >
-                                {month.name}
-                            </div>
-                        ))}
+                                                    }`}
+                                            ></div>
+                                        )
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                        {/* Month labels moved to bottom */}
+                        <div className="flex text-[11px] text-gray-400 h-[20px] mt-1">
+                            {getMonthLabels().map((month, index) => (
+                                <div
+                                    key={index}
+                                    className="absolute"
+                                    style={{ marginLeft: `${month.index * 15}px` }}
+                                >
+                                    {month.name}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div className="text-[11px] text-gray-400 flex items-center justify-end">
-                <span className="mr-2">Less</span>
-                <div className="flex gap-[3px]">
-                    <div className="w-[13px] h-[13px] bg-gray-100 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-green-300 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-green-400 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-green-600 rounded-[2px]"></div>
-                    <div className="w-[13px] h-[13px] bg-green-700 rounded-[2px]"></div>
+                <div className="text-[11px] text-gray-400 flex items-center justify-end">
+                    <span className="mr-2">Less</span>
+                    <div className="flex gap-[3px]">
+                        <div className="w-[14px] h-[14px] bg-gray-100 rounded-[2px]"></div>
+                        <div className="w-[14px] h-[14px] bg-green-300 rounded-[2px]"></div>
+                        <div className="w-[14px] h-[14px] bg-green-400 rounded-[2px]"></div>
+                        <div className="w-[14px] h-[14px] bg-green-600 rounded-[2px]"></div>
+                        <div className="w-[14px] h-[14px] bg-green-700 rounded-[2px]"></div>
+                    </div>
+                    <span className="ml-2">More</span>
                 </div>
-                <span className="ml-2">More</span>
             </div>
         </div>
     );

@@ -41,8 +41,8 @@ const UserProfileCard = ({ user }) => {
     ];
 
     return (
-        <>
-            <div className="relative flex w-full items-center justify-center">
+        <div className="lg:w-1/4 bg-gray-800 rounded-lg p-4 border border-gray-700 shadow-md">
+            <div className="flex flex-row gap-4">
                 <Image
                     alt="user's avatar"
                     src={returnImageProxy(user.avatar, user?.pubkey || "")}
@@ -50,41 +50,72 @@ const UserProfileCard = ({ user }) => {
                     height={100}
                     className="rounded-full my-4"
                 />
-                <div className="absolute top-8 right-80 max-tab:right-20 max-mob:left-0">
-                    <i
-                        className="pi pi-ellipsis-h text-2xl cursor-pointer"
-                        onClick={(e) => menu.current.toggle(e)}
-                    />
-                    <Menu
-                        model={menuItems}
-                        popup
-                        ref={menu}
-                        id="profile-options-menu"
-                    />
+
+                <div className="flex flex-col gap-2 pt-4 w-full relative">
+                    <div className="absolute top-0 right-0">
+                        <i
+                            className="pi pi-ellipsis-h text-2xl cursor-pointer"
+                            onClick={(e) => menu.current.toggle(e)}
+                        />
+                        <Menu
+                            model={menuItems}
+                            popup
+                            ref={menu}
+                            id="profile-options-menu"
+                        />
+                    </div>
+                    <h3 className="self-start">
+                        {user.username || user?.name || user?.email || "Anon"}
+                    </h3>
+                    {
+                        user?.pubkey && (
+                            <div className="flex flex-row gap-2">
+                                <p className="truncate">
+                                    {nip19.npubEncode(user.pubkey).slice(0, 12)}...
+                                </p>
+                                <Tooltip target=".pubkey-tooltip" content={"this is your account pubkey"} />
+                                <i className="pi pi-question-circle pubkey-tooltip text-xs cursor-pointer" />
+                            </div>
+                        )
+                    }
+                    {user?.createdAt && (
+                        <p className="truncate">
+                            Joined: {new Date(user.createdAt).toLocaleDateString()}
+                        </p>
+                    )}
                 </div>
             </div>
-
-
-            <h1 className="text-center text-2xl my-2">
-                {user.username || user?.name || user?.email || "Anon"}
-            </h1>
-            {user.pubkey && (
-                <h2 className="text-center text-xl my-2 truncate max-tab:px-4 max-mob:px-4">
-                    <Tooltip target=".pubkey-tooltip" content={"this is your nostr npub"} />
-                    {nip19.npubEncode(user.pubkey)} <i className="pi pi-question-circle text-xl pubkey-tooltip" />
-                </h2>
-            )}
-            {user?.lightningAddress && (
-                <h3 className="w-fit mx-auto text-center text-xl my-2 bg-gray-800 rounded-lg p-4">
-                    <span className="font-bold">Lightning Address:</span> {user.lightningAddress.name}@plebdevs.com <i className="pi pi-copy cursor-pointer hover:text-gray-400" onClick={() => copyToClipboard(user.lightningAddress.name + "@plebdevs.com")} />
-                </h3>
-            )}
-            {user?.nip05 && (
-                <h3 className="w-fit mx-auto text-center text-xl my-2 bg-gray-800 rounded-lg p-4">
-                    <span className="font-bold">NIP-05:</span> {user.nip05.name}@plebdevs.com <i className="pi pi-copy cursor-pointer hover:text-gray-400" onClick={() => copyToClipboard(user.nip05.name + "@plebdevs.com")} />
-                </h3>
-            )}
-        </>
+            <div className="flex flex-col gap-2">
+                {user?.lightningAddress ? (
+                    <h4 className="my-2 bg-gray-900 rounded-lg p-4">
+                        <span className="font-bold">Lightning Address:</span> {user.lightningAddress.name}@plebdevs.com <i className="pi pi-copy cursor-pointer hover:text-gray-400" onClick={() => copyToClipboard(user.lightningAddress.name + "@plebdevs.com")} />
+                    </h4>
+                ) : (
+                    <div className="flex flex-row justify-between my-2 bg-gray-900 rounded-lg p-4">
+                        <h4 >
+                            <span className="font-bold">Lightning Address:</span> None
+                        </h4>
+                        {/* todo: add tooltip */}
+                        <Tooltip target=".lightning-address-tooltip" content={"this is your account lightning address"} />
+                        <i className="pi pi-question-circle lightning-address-tooltip text-xs cursor-pointer" />
+                    </div>
+                )}
+                {user?.nip05 ? (
+                    <h4 className="my-2 bg-gray-900 rounded-lg p-4">
+                        <span className="font-bold">NIP-05:</span> {user.nip05.name}@plebdevs.com <i className="pi pi-copy cursor-pointer hover:text-gray-400" onClick={() => copyToClipboard(user.nip05.name + "@plebdevs.com")} />
+                    </h4>
+                ) : (
+                    <div className="flex flex-row justify-between my-2 bg-gray-900 rounded-lg p-4">
+                        <h4>
+                            <span className="font-bold">NIP-05:</span> None
+                        </h4>
+                        {/* todo: add tooltip */}
+                        <Tooltip target=".nip05-tooltip" content={"this is your account nip05"} />
+                        <i className="pi pi-question-circle nip05-tooltip text-xs cursor-pointer" />
+                    </div>
+                )}
+            </div>
+        </div>
     );
 };
 

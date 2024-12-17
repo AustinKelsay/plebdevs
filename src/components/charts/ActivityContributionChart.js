@@ -157,7 +157,7 @@ const ActivityContributionChart = ({ session }) => {
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
-        <div className="w-full mx-2 bg-gray-800 rounded-lg border border-gray-700 shadow-md">
+        <div className="w-full mx-2 bg-gray-800 rounded-lg border border-gray-700 shadow-md h-[330px] max-lap:mx-0 max-lap:mt-2">
             <div className="flex flex-row justify-between items-center p-4">
                 <h1 className="text-2xl font-bold text-gray-200">Activity</h1>
                 <i className="pi pi-question-circle text-2xl cursor-pointer text-gray-200"

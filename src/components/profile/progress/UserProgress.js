@@ -4,7 +4,6 @@ import { Accordion, AccordionTab } from 'primereact/accordion';
 import { useSession, signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import GenericButton from '@/components/buttons/GenericButton';
-import UserBadges from '@/components/profile/UserBadges';
 import UserProgressFlow from './UserProgressFlow';
 import { Tooltip } from 'primereact/tooltip';
 
@@ -56,7 +55,6 @@ const UserProgress = () => {
     const [expandedItems, setExpandedItems] = useState({});
     const [completedCourses, setCompletedCourses] = useState([]);
     const [tasks, setTasks] = useState([]);
-    const [showBadges, setShowBadges] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     const router = useRouter();
@@ -177,7 +175,7 @@ const UserProgress = () => {
     };
 
     return (
-        <div className="bg-gray-800 rounded-lg p-4 m-2 w-full border border-gray-700 shadow-md">
+        <div className="bg-gray-800 rounded-lg p-4 pb-0 m-2 w-full border border-gray-700 shadow-md max-lap:mx-0">
             <div className="flex flex-row justify-between items-center">
                 <h1 className="text-3xl font-bold text-white mb-2">Dev Journey</h1>
                 <i className="pi pi-question-circle text-2xl cursor-pointer text-gray-200"
@@ -209,8 +207,8 @@ const UserProgress = () => {
                 )}
             </div>
 
-            <div className="flex gap-6 mb-6">
-                <div className="w-1/2">
+            <div className="flex max-sidebar:flex-col gap-6 mb-6">
+                <div className="w-1/2 max-sidebar:w-full">
                     <ul className="space-y-6 pt-2">
                         {tasks.map((task, index) => (
                             <li key={index}>
@@ -291,7 +289,7 @@ const UserProgress = () => {
                     </ul>
                 </div>
 
-                <div className="w-1/2">
+                <div className="w-1/2 max-sidebar:w-full">
                     {isLoading ? (
                         <div className="h-[400px] bg-gray-800 rounded-3xl flex items-center justify-center">
                             <i className="pi pi-spin pi-spinner text-4xl text-gray-600"></i>
@@ -301,18 +299,6 @@ const UserProgress = () => {
                     )}
                 </div>
             </div>
-
-            <button 
-                className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold"
-                onClick={() => setShowBadges(true)}
-            >
-                View Badges
-            </button>
-
-            <UserBadges 
-                visible={showBadges}
-                onHide={() => setShowBadges(false)}
-            />
         </div>
     );
 };

@@ -1,12 +1,13 @@
 import React from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { classNames } from "primereact/utils";
+import useWindowWidth from "@/hooks/useWindowWidth";
 import ProgressListItem from "@/components/content/lists/ProgressListItem";
 import { formatDateTime } from "@/utils/time";
 import { ProgressSpinner } from "primereact/progressspinner";
 
-const UserProgressTable = ({ session, ndk, windowWidth }) => {
+const UserProgressTable = ({ session, ndk }) => {
+    const windowWidth = useWindowWidth();
     const prepareProgressData = () => {
         if (!session?.user?.userCourses) return [];
         
@@ -129,7 +130,8 @@ const UserProgressTable = ({ session, ndk, windowWidth }) => {
             emptyMessage="No Courses or Milestones completed"
             value={prepareProgressData()}
             header={header}
-            style={{ margin: 8, width: "100%", borderRadius: "8px", border: "1px solid #333", boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)" }}
+            className="m-2 max-lap:m-0"
+            style={{ width: "100%", borderRadius: "8px", border: "1px solid #333", boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)" }}
             pt={{
                 wrapper: {
                     className: "rounded-b-lg shadow-md"

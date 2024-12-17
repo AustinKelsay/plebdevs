@@ -37,10 +37,9 @@ const UserProfile = () => {
                         <h1 className="text-3xl font-bold mb-6">Profile</h1>
                     )
                 }
-                <div className="w-full flex flex-row">
+                <div className="w-full flex flex-row max-lap:flex-col">
                     <UserProfileCard user={user} />
                     <div className="w-full flex flex-col justify-center mx-auto">
-
                         {account && account?.provider === "github" ? (
                             <CombinedContributionChart session={session} />
                         ) : (

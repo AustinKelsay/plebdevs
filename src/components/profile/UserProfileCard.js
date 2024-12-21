@@ -46,7 +46,7 @@ const UserProfileCard = ({ user }) => {
     ];
 
     const MobileProfileCard = () => (
-        <div className="w-full bg-gray-800 rounded-lg p-2 py-1 border border-gray-700 shadow-md h-[330px] flex flex-col justify-center">
+        <div className="w-full bg-gray-800 rounded-lg p-2 py-1 border border-gray-700 shadow-md h-[420px] flex flex-col justify-center items-start">
             <div className="flex flex-col gap-2 pt-4 w-full relative">
                 <div className="absolute top-8 right-[10px]">
                     <i
@@ -66,7 +66,7 @@ const UserProfileCard = ({ user }) => {
                 src={returnImageProxy(user.avatar, user?.pubkey || "")}
                 width={100}
                 height={100}
-                className="rounded-full mt-2 mx-auto"
+                className="rounded-full m-2 mt-0"
             />
             <h3 className="text-center">
                 {user.username || user?.name || user?.email || "Anon"}
@@ -84,7 +84,7 @@ const UserProfileCard = ({ user }) => {
                     )
                 }
                 {user?.createdAt && (
-                    <p className="truncate text-center">
+                    <p className="truncate">
                         Joined: {new Date(user.createdAt).toLocaleDateString()}
                     </p>
                 )}
@@ -119,21 +119,21 @@ const UserProfileCard = ({ user }) => {
                             <i className="pi pi-question-circle nip05-tooltip text-xs cursor-pointer" />
                         </div>
                     )}
-                </div>
                 <div className="flex flex-col justify-center min-w-[140px] px-2">
                     <button
                         className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold"
                         onClick={() => setShowBadges(true)}
-                    >
+                        >
                         View Badges
                     </button>
+                        </div>
                 </div>
             </div>
         </div>
     );
 
     const DesktopProfileCard = () => (
-        <div className="w-1/4 bg-gray-800 rounded-lg p-2 py-1 border border-gray-700 shadow-md h-[330px]">
+        <div className="w-full bg-gray-800 rounded-lg p-2 py-1 border border-gray-700 shadow-md h-[330px]">
             <div className="flex flex-row w-full justify-around">
                 <Image
                     alt="user's avatar"

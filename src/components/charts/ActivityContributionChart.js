@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { Tooltip } from 'primereact/tooltip';
 import { formatDateTime } from "@/utils/time";
+import useWindowWidth from '@/hooks/useWindowWidth';
 
 const ActivityContributionChart = ({ session }) => {
     const [contributionData, setContributionData] = useState({});
     const [totalActivities, setTotalActivities] = useState(0);
+    const windowWidth = useWindowWidth();
 
     // Prepare activity data
     const prepareActivityData = useCallback(() => {
@@ -156,6 +158,12 @@ const ActivityContributionChart = ({ session }) => {
     const calendar = generateCalendar();
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+    const getScaleClass = (width) => {
+        if (width <= 800) return 'scale-75 origin-top-left';
+        if (width <= 1000) return 'scale-95 origin-top-left';
+        return '';
+    };
+
     return (
         <div className="w-full mx-2 bg-gray-800 rounded-lg border border-gray-700 shadow-md h-[330px] max-lap:mx-0 max-lap:mt-2">
             <div className="flex flex-row justify-between items-center p-4">
@@ -164,7 +172,7 @@ const ActivityContributionChart = ({ session }) => {
                     data-pr-tooltip="Total number of learning activities on the platform" />
                 <Tooltip target=".pi-question-circle" position="left" />
             </div>
-            <div className="max-w-[910px] p-4">
+            <div className={`max-w-[910px] p-4 ${getScaleClass(windowWidth)}`}>
                 <div className="flex justify-between items-center mb-3">
                     <h4 className="text-base font-semibold text-gray-200">
                         {totalActivities} learning activities in the last year

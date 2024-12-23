@@ -71,15 +71,17 @@ const UserProfileCard = ({ user }) => {
             <h3 className="text-center">
                 {user.username || user?.name || user?.email || "Anon"}
             </h3>
-            <div className="flex flex-col gap-2 justify-center">
+            <div className="flex flex-col gap-2 justify-center w-full overflow-hidden">
                 {
                     user?.pubkey && (
-                        <div className="flex flex-row gap-2 justify-center">
-                            <p className="truncate">
-                                {nip19.npubEncode(user.pubkey)}
-                            </p>
+                        <div className="flex flex-row gap-2 items-center w-full overflow-hidden">
+                            <div className="overflow-hidden">
+                                <p className="text-ellipsis overflow-hidden whitespace-nowrap">
+                                    {nip19.npubEncode(user.pubkey)}
+                                </p>
+                            </div>
                             <Tooltip target=".pubkey-tooltip" content={"this is your account pubkey"} />
-                            <i className="pi pi-question-circle pubkey-tooltip text-xs cursor-pointer" />
+                            <i className="pi pi-question-circle pubkey-tooltip text-xs cursor-pointer shrink-0" />
                         </div>
                     )
                 }
@@ -134,7 +136,7 @@ const UserProfileCard = ({ user }) => {
 
     const DesktopProfileCard = () => (
         <div className="w-full bg-gray-800 rounded-lg p-2 py-1 border border-gray-700 shadow-md h-[330px]">
-            <div className="flex flex-row w-full justify-around">
+            <div className="flex flex-row w-full justify-evenly">
                 <Image
                     alt="user's avatar"
                     src={returnImageProxy(user.avatar, user?.pubkey || "")}
@@ -143,7 +145,7 @@ const UserProfileCard = ({ user }) => {
                     className="rounded-full my-4"
                 />
                 <div className="flex flex-col gap-2 pt-4 w-fit relative">
-                    <div className="absolute top-[-4px] right-[-10px]">
+                    <div className="absolute top-[-4px] right-[-30px]">
                         <i
                             className="pi pi-ellipsis-h text-2xl cursor-pointer"
                             onClick={(e) => menu.current.toggle(e)}

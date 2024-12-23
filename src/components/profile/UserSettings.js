@@ -32,7 +32,7 @@ const UserSettings = () => {
                     <h1 className="text-3xl font-bold mb-6">Settings</h1>
                 )}
                 <div className="w-full flex flex-row max-lap:flex-col">
-                    <div className="w-1/4 h-full max-lap:w-full">
+                    <div className="w-[22%] h-full max-lap:w-full">
                         <UserProfileCard user={user} />
 
                         {/* Lightning Info Card */}
@@ -51,7 +51,7 @@ const UserSettings = () => {
                         {user && <SubscribeModal user={user} />}
                     </div>
 
-                    <div className="w-3/4 flex flex-col justify-center mx-auto max-lap:w-full ml-2 max-lap:ml-0">
+                    <div className="w-[78%] flex flex-col justify-center mx-auto max-lap:w-full ml-2 max-lap:ml-0">
                         <UserRelaysTable 
                             ndk={ndk}
                             userRelays={userRelays}

@@ -34,6 +34,7 @@ const SubscribeModal = ({ user }) => {
     const [nip05Visible, setNip05Visible] = useState(false);
     const [cancelSubscriptionVisible, setCancelSubscriptionVisible] = useState(false);
     const [renewSubscriptionVisible, setRenewSubscriptionVisible] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState('monthly');
 
     useEffect(() => {
         if (user && user.role) {
@@ -148,7 +149,17 @@ const SubscribeModal = ({ user }) => {
 
     return (
         <>
-            <Card title={subscriptionCardTitle} className="w-full m-4 mx-auto border border-gray-700">
+            <Card title={subscriptionCardTitle} className="w-full mx-auto border border-gray-700">
+            {!session?.user && (
+                    <div className="flex flex-col">
+                        <Message className="w-fit" severity="info" text="You must be logged in to subscribe" />
+                        <GenericButton
+                            label="Login"
+                            className="w-auto mt-4 text-[#f8f8ff]"
+                            onClick={() => router.push('/auth/signin')}
+                        />
+                    </div>
+                )}
                 {subscribed && !user?.role?.nwc && (
                     <div className="flex flex-col">
                         <Message className="w-fit" severity="success" text="Subscribed!" />
@@ -163,7 +174,7 @@ const SubscribeModal = ({ user }) => {
                         <p className="text-sm text-gray-400">Recurring subscription will AUTO renew on {subscribedUntil.toLocaleDateString()}</p>
                     </div>
                 )}
-                {(!subscribed && !subscriptionExpiredAt) && (
+                {(!subscribed && !subscriptionExpiredAt && session?.user) && (
                     <div className="flex flex-col">
                         <Message className="w-fit" severity="info" text="You currently have no active subscription" />
                         <GenericButton
@@ -223,6 +234,39 @@ const SubscribeModal = ({ user }) => {
                             <Badge value="BONUS" severity="success" className="mr-2 text-[#f8f8ff] font-bold"></Badge>
                             <span className="text-center font-bold">I WILL MAKE SURE YOU WIN HARD AND LEVEL UP AS A DEV!</span>
                         </div>
+
+                        <div className="flex justify-center gap-4 mb-4">
+                            <div 
+                                className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
+                                    ${selectedPlan === 'monthly' ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'}`}
+                                onClick={() => setSelectedPlan('monthly')}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
+                                        ${selectedPlan === 'monthly' ? 'border-blue-400' : 'border-gray-400'}`}>
+                                        {selectedPlan === 'monthly' && <div className="w-2 h-2 rounded-full bg-blue-400"></div>}
+                                    </div>
+                                    <span className="font-semibold">Monthly</span>
+                                </div>
+                                <div className="text-lg font-bold">50,000 sats</div>
+                            </div>
+
+                            <div 
+                                className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
+                                    ${selectedPlan === 'yearly' ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'}`}
+                                onClick={() => setSelectedPlan('yearly')}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
+                                        ${selectedPlan === 'yearly' ? 'border-blue-400' : 'border-gray-400'}`}>
+                                        {selectedPlan === 'yearly' && <div className="w-2 h-2 rounded-full bg-blue-400"></div>}
+                                    </div>
+                                    <span className="font-semibold">Yearly</span>
+                                </div>
+                                <div className="text-lg font-bold">500,000 sats</div>
+                            </div>
+                        </div>
+
                         <SubscriptionPaymentButtons
                             onSuccess={handleSubscriptionSuccess}
                             onRecurringSubscriptionSuccess={handleRecurringSubscriptionSuccess}

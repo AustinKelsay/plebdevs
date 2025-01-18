@@ -46,9 +46,6 @@ const UserSettings = () => {
                             </p>
                             <BitcoinConnectButton />
                         </div>
-
-                        {/* Subscription Modal */}
-                        {user && <SubscribeModal user={user} />}
                     </div>
 
                     <div className="w-[78%] flex flex-col justify-center mx-auto max-lap:w-full ml-2 max-lap:ml-0">

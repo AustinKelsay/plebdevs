@@ -5,8 +5,9 @@ import { useToast } from '@/hooks/useToast';
 import axios from 'axios';
 import { Card } from 'primereact/card';
 import useWindowWidth from '@/hooks/useWindowWidth';
-import { Message } from "primereact/message";
+import SubscribeModal from '@/components/profile/subscription/SubscribeModal';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import UserProfileCard from '@/components/profile/UserProfileCard';
 import SubscriptionPaymentButtons from '@/components/bitcoinConnect/SubscriptionPaymentButton';
 import Image from 'next/image';
 import NostrIcon from '../../../../public/images/nostr.png';
@@ -101,32 +102,9 @@ const UserSubscription = () => {
             <div className="w-full flex flex-row max-lap:flex-col">
                 {/* Left Column - 22% */}
                 <div className="w-[21%] h-full max-lap:w-full">
-                    <div className="p-4 bg-gray-800 rounded-lg max-lap:mb-4">
-                        {/* Subscription Status Messages */}
-                        {subscribed && !user?.role?.nwc && (
-                            <div className="flex flex-col">
-                                <Message className="w-fit" severity="success" text="Subscribed!" />
-                                <p className="mt-4">Thank you for your support 🎉</p>
-                                <p className="text-sm text-gray-400">Pay-as-you-go subscription requires manual renewal on {subscribedUntil.toLocaleDateString()}</p>
-                            </div>
-                        )}
-                        {subscribed && user?.role?.nwc && (
-                            <div className="flex flex-col">
-                                <Message className="w-fit" severity="success" text="Subscribed!" />
-                                <p className="mt-4">Thank you for your support 🎉</p>
-                                <p className="text-sm text-gray-400">Recurring subscription will AUTO renew on {subscribedUntil.toLocaleDateString()}</p>
-                            </div>
-                        )}
-                        {(!subscribed && !subscriptionExpiredAt) && (
-                            <div className="flex flex-col">
-                                <Message className="w-fit" severity="info" text="You currently have no active subscription" />
-                            </div>
-                        )}
-                        {subscriptionExpiredAt && (
-                            <div className="flex flex-col">
-                                <Message className="w-fit" severity="warn" text={`Your subscription expired on ${subscriptionExpiredAt.toLocaleDateString()}`} />
-                            </div>
-                        )}
+                    {user && <UserProfileCard user={user} />}
+                    <div className="mt-4">
+                        <SubscribeModal />
                     </div>
                 </div>
 

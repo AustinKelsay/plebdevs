@@ -4,9 +4,8 @@ import { useRouter } from 'next/router';
 import { useToast } from '@/hooks/useToast';
 import axios from 'axios';
 import { Card } from 'primereact/card';
-import { Message } from 'primereact/message';
+import SubscribeModal from '@/components/profile/subscription/SubscribeModal';
 import useWindowWidth from '@/hooks/useWindowWidth';
-import { Menu } from "primereact/menu";
 import GenericButton from '@/components/buttons/GenericButton';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import SubscriptionPaymentButtons from '@/components/bitcoinConnect/SubscriptionPaymentButton';
@@ -122,61 +121,13 @@ const Subscribe = () => {
         },
     ];
 
-    const subscriptionCardTitleAndButton = (
-        <div className="w-full flex flex-row justify-between items-center">
-            <span className="text-xl text-900 font-bold text-white">Plebdevs Subscription</span>
-            <i
-                className="pi pi-ellipsis-h text-2xlcursor-pointer hover:opacity-75"
-                onClick={(e) => menu.current.toggle(e)}
-            ></i>
-            <Menu model={menuItems} popup ref={menu} />
-        </div>
-    );
-
-    const subscriptionCardTitle = (
-        <div className="w-full flex flex-row justify-between items-center">
-            <span className="text-xl text-900 font-bold text-white">Plebdevs Subscription</span>
-        </div>
-    );
-
     return (
         <div className="p-4">
             {windowWidth < 768 && (
                 <h1 className="text-3xl font-bold mb-6">Subscription Management</h1>
             )}
             <div className="mb-4 p-4 bg-gray-800 rounded-lg w-fit">
-                {session && session?.user ? (
-                    <>
-                        {subscribed && !user?.role?.nwc && (
-                            <div className="flex flex-col">
-                                <Message className="w-fit" severity="success" text="Subscribed!" />
-                                <p className="mt-4">Thank you for your support 🎉</p>
-                                <p className="text-sm text-gray-400">Pay-as-you-go subscription must be manually renewed on {subscribedUntil.toLocaleDateString()}</p>
-                            </div>
-                        )}
-                        {subscribed && user?.role?.nwc && (
-                            <div className="flex flex-col">
-                                <Message className="w-fit" severity="success" text="Subscribed!" />
-                                <p className="mt-4">Thank you for your support 🎉</p>
-                                <p className="text-sm text-gray-400">Recurring subscription will AUTO renew on {subscribedUntil.toLocaleDateString()}</p>
-                            </div>
-                        )}
-                        {(!subscribed && !subscriptionExpiredAt) && (
-                            <div className="flex flex-col">
-                                <Message className="w-fit" severity="info" text="You currently have no active subscription" />
-                            </div>
-                        )}
-                        {subscriptionExpiredAt && (
-                            <div className="flex flex-col">
-                                <Message className="w-fit" severity="warn" text={`Your subscription expired on ${subscriptionExpiredAt.toLocaleDateString()}`} />
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <div className="flex flex-col">
-                        <Message className="w-fit" severity="info" text="Login to manage your subscription" />
-                    </div>
-                )}
+                <SubscribeModal />
             </div>
 
             {!session?.user && (

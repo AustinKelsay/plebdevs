@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import { useToast } from '@/hooks/useToast';
 import axios from 'axios';
 
-const RenewSubscription = ({ visible, onHide, subscribedUntil }) => {
+const RenewSubscription = ({ visible, onHide, subscribedUntil, selectedPlan }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const { data: session, update } = useSession();
     const { showToast } = useToast();
@@ -70,6 +70,7 @@ const RenewSubscription = ({ visible, onHide, subscribedUntil }) => {
                         onError={handleSubscriptionError}
                         setIsProcessing={setIsProcessing}
                         layout="col"
+                        selectedPlan={selectedPlan}
                     />
                 </Card>
             )}

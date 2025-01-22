@@ -18,7 +18,7 @@ const PaymentModal = dynamic(
     { ssr: false }
 );
 
-const SubscriptionPaymentButtons = ({ onSuccess, onError, onRecurringSubscriptionSuccess, setIsProcessing, oneTime = false, recurring = false, layout = "row" }) => {
+const SubscriptionPaymentButtons = ({ onSuccess, onError, onRecurringSubscriptionSuccess, setIsProcessing, oneTime = false, recurring = false, layout = "row", selectedPlan = 'monthly' }) => {
     const [invoice, setInvoice] = useState(null);
     const [showRecurringOptions, setShowRecurringOptions] = useState(false);
     const [nwcInput, setNwcInput] = useState('');
@@ -27,7 +27,7 @@ const SubscriptionPaymentButtons = ({ onSuccess, onError, onRecurringSubscriptio
     const router = useRouter();
 
     const lnAddress = process.env.NEXT_PUBLIC_LIGHTNING_ADDRESS;
-    const amount = 50000;
+    const amount = selectedPlan === 'yearly' ? 500000 : 50000;
 
     useEffect(() => {
         initializeBitcoinConnect();
@@ -92,9 +92,9 @@ const SubscriptionPaymentButtons = ({ onSuccess, onError, onRecurringSubscriptio
             const initNwcOptions = {
                 name: "plebdevs.com",
                 requestMethods: ['pay_invoice'],
-                maxAmount: 50000,
+                maxAmount: selectedPlan === 'yearly' ? 500000 : 50000,
                 editable: false,
-                budgetRenewal: 'monthly',
+                budgetRenewal: selectedPlan === 'yearly' ? 'yearly' : 'monthly',
                 expiresAt: yearFromNow,
             };
             await newNwc.initNWC(initNwcOptions);
@@ -257,7 +257,10 @@ const SubscriptionPaymentButtons = ({ onSuccess, onError, onRecurringSubscriptio
                         <AlbyButton handleSubmit={handleRecurringSubscription} />
                         <span className='my-4 text-lg font-bold'>or</span>
                         <p className='text-lg font-bold'>Manually enter NWC URL</p>
-                        <span className='text-sm text-gray-500'>*make sure you set a budget of at least 50000 sats and set budget renewal to monthly</span>
+                        <span className='text-sm text-gray-500'>
+                            *make sure you set a budget of at least {selectedPlan === 'yearly' ? '500,000' : '50,000'} sats 
+                            and set budget renewal to {selectedPlan === 'yearly' ? 'yearly' : 'monthly'}
+                        </span>
                         <input
                             type="text"
                             value={nwcInput}

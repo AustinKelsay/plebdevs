@@ -21,11 +21,11 @@ const Subscribe = () => {
     const { data: session, update } = useSession();
     const { showToast } = useToast();
     const router = useRouter();
-    const menu = useRef(null);
     const windowWidth = useWindowWidth();
     const [user, setUser] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [subscribed, setSubscribed] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState('monthly');
     const [subscribedUntil, setSubscribedUntil] = useState(null);
     const [subscriptionExpiredAt, setSubscriptionExpiredAt] = useState(null);
     const [calendlyVisible, setCalendlyVisible] = useState(false);
@@ -59,6 +59,7 @@ const Subscribe = () => {
             const apiResponse = await axios.put('/api/users/subscription', {
                 userId: session.user.id,
                 isSubscribed: true,
+                selectedPlan: selectedPlan,
             });
             if (apiResponse.data) {
                 await update();
@@ -92,34 +93,6 @@ const Subscribe = () => {
             setIsProcessing(false);
         }
     };
-
-    const menuItems = [
-        {
-            label: "Schedule 1:1",
-            icon: "pi pi-calendar",
-            command: () => setCalendlyVisible(true),
-        },
-        {
-            label: session?.user?.lightningAddress ? "Update PlebDevs Lightning Address" : "Claim PlebDevs Lightning Address",
-            icon: "pi pi-bolt",
-            command: () => setLightningAddressVisible(true),
-        },
-        {
-            label: session?.user?.nip05 ? "Update PlebDevs Nostr NIP-05" : "Claim PlebDevs Nostr NIP-05",
-            icon: "pi pi-at",
-            command: () => setNip05Visible(true),
-        },
-        {
-            label: "Renew Subscription",
-            icon: "pi pi-sync",
-            command: () => setRenewSubscriptionVisible(true),
-        },
-        {
-            label: "Cancel Subscription",
-            icon: "pi pi-trash",
-            command: () => setCancelSubscriptionVisible(true),
-        },
-    ];
 
     return (
         <div className="p-4">
@@ -181,11 +154,45 @@ const Subscribe = () => {
                                 <span>I WILL MAKE SURE YOU WIN HARD AND LEVEL UP AS A DEV!</span>
                             </div>
                         </div>
+
+                        <div className="flex justify-start gap-8 mb-4">
+                            <div 
+                                className={`p-4 px-12 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
+                                    ${selectedPlan === 'monthly' ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'}`}
+                                onClick={() => setSelectedPlan('monthly')}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
+                                        ${selectedPlan === 'monthly' ? 'border-blue-400' : 'border-gray-400'}`}>
+                                        {selectedPlan === 'monthly' && <div className="w-2 h-2 rounded-full bg-blue-400"></div>}
+                                    </div>
+                                    <span className="font-semibold">Monthly</span>
+                                </div>
+                                <div className="text-lg font-bold">50,000 sats</div>
+                            </div>
+
+                            <div 
+                                className={`p-4 px-12 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
+                                    ${selectedPlan === 'yearly' ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'}`}
+                                onClick={() => setSelectedPlan('yearly')}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
+                                        ${selectedPlan === 'yearly' ? 'border-blue-400' : 'border-gray-400'}`}>
+                                        {selectedPlan === 'yearly' && <div className="w-2 h-2 rounded-full bg-blue-400"></div>}
+                                    </div>
+                                    <span className="font-semibold">Yearly</span>
+                                </div>
+                                <div className="text-lg font-bold">500,000 sats</div>
+                            </div>
+                        </div>
+
                         <SubscriptionPaymentButtons
                             onSuccess={handleSubscriptionSuccess}
                             onRecurringSubscriptionSuccess={handleRecurringSubscriptionSuccess}
                             onError={handleSubscriptionError}
                             setIsProcessing={setIsProcessing}
+                            selectedPlan={selectedPlan}
                             layout={windowWidth < 768 ? "col" : "row"}
                         />
                     </div>
@@ -262,6 +269,7 @@ const Subscribe = () => {
                 visible={renewSubscriptionVisible}
                 onHide={() => setRenewSubscriptionVisible(false)}
                 subscribedUntil={subscribedUntil}
+                selectedPlan={selectedPlan}
             />
             <Nip05Form
                 visible={nip05Visible}

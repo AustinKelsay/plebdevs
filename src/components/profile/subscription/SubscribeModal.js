@@ -235,9 +235,9 @@ const SubscribeModal = ({ user }) => {
                             <span className="text-center font-bold">I WILL MAKE SURE YOU WIN HARD AND LEVEL UP AS A DEV!</span>
                         </div>
 
-                        <div className="flex justify-center gap-4 mb-4">
+                        <div className="flex justify-center gap-8 mb-4">
                             <div 
-                                className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
+                                className={`p-4 px-12 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
                                     ${selectedPlan === 'monthly' ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'}`}
                                 onClick={() => setSelectedPlan('monthly')}
                             >
@@ -252,7 +252,7 @@ const SubscribeModal = ({ user }) => {
                             </div>
 
                             <div 
-                                className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
+                                className={`p-4 px-12 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
                                     ${selectedPlan === 'yearly' ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'}`}
                                 onClick={() => setSelectedPlan('yearly')}
                             >
@@ -272,6 +272,7 @@ const SubscribeModal = ({ user }) => {
                             onRecurringSubscriptionSuccess={handleRecurringSubscriptionSuccess}
                             onError={handleSubscriptionError}
                             setIsProcessing={setIsProcessing}
+                            selectedPlan={selectedPlan}
                         />
                     </Card>
                 )}
@@ -291,6 +292,7 @@ const SubscribeModal = ({ user }) => {
                 visible={renewSubscriptionVisible}
                 onHide={() => setRenewSubscriptionVisible(false)}
                 subscribedUntil={subscribedUntil}
+                selectedPlan={selectedPlan}
             />
             <Nip05Form
                 visible={nip05Visible}

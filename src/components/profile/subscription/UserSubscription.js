@@ -21,9 +21,7 @@ import RenewSubscription from '@/components/profile/subscription/RenewSubscripti
 const UserSubscription = () => {
     const { data: session, update } = useSession();
     const { showToast } = useToast();
-    const router = useRouter();
     const windowWidth = useWindowWidth();
-    const menu = useRef(null);
     const [user, setUser] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [subscribed, setSubscribed] = useState(false);
@@ -34,6 +32,7 @@ const UserSubscription = () => {
     const [nip05Visible, setNip05Visible] = useState(false);
     const [cancelSubscriptionVisible, setCancelSubscriptionVisible] = useState(false);
     const [renewSubscriptionVisible, setRenewSubscriptionVisible] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState('monthly');
 
     useEffect(() => {
         if (session && session?.user) {
@@ -109,9 +108,10 @@ const UserSubscription = () => {
                 </div>
 
                 {/* Right Column - 78% */}
-                <div className="w-[78%] flex flex-col justify-center mx-auto max-lap:w-full">
+                <div className="w-[78%] flex flex-col justify-center mx-auto max-lap:w-full max-lap:mt-4">
+                    <div className="border border-gray-600 rounded-lg mb-4">
                     {!subscribed && (
-                        <Card title="Subscribe to PlebDevs" className="mb-4">
+                        <Card title="Subscribe to PlebDevs">
                             {isProcessing ? (
                                 <div className="w-full flex flex-col mx-auto justify-center items-center mt-4">
                                     <div className='w-full h-full flex items-center justify-center'><ProgressSpinner /></div>
@@ -145,17 +145,53 @@ const UserSubscription = () => {
                                         <span>I WILL MAKE SURE YOU WIN HARD AND LEVEL UP AS A DEV!</span>
                                     </div>
                                     </div>
+
+                                    {/* Add new subscription option containers */}
+                                    <div className="flex justify-start gap-8 mb-4">
+                                        <div 
+                                            className={`p-4 px-12 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
+                                                ${selectedPlan === 'monthly' ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'}`}
+                                            onClick={() => setSelectedPlan('monthly')}
+                                        >
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
+                                                    ${selectedPlan === 'monthly' ? 'border-blue-400' : 'border-gray-400'}`}>
+                                                    {selectedPlan === 'monthly' && <div className="w-2 h-2 rounded-full bg-blue-400"></div>}
+                                                </div>
+                                                <span className="font-semibold">Monthly</span>
+                                            </div>
+                                            <div className="text-lg font-bold">50,000 sats</div>
+                                        </div>
+
+                                        <div 
+                                            className={`p-4 px-12 border rounded-lg cursor-pointer transition-all duration-200 hover:border-blue-400
+                                                ${selectedPlan === 'yearly' ? 'border-blue-400 bg-blue-900/20' : 'border-gray-600'}`}
+                                            onClick={() => setSelectedPlan('yearly')}
+                                        >
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
+                                                    ${selectedPlan === 'yearly' ? 'border-blue-400' : 'border-gray-400'}`}>
+                                                    {selectedPlan === 'yearly' && <div className="w-2 h-2 rounded-full bg-blue-400"></div>}
+                                                </div>
+                                                <span className="font-semibold">Yearly</span>
+                                            </div>
+                                            <div className="text-lg font-bold">500,000 sats</div>
+                                        </div>
+                                    </div>
+
                                     <SubscriptionPaymentButtons
                                         onSuccess={handleSubscriptionSuccess}
                                         onRecurringSubscriptionSuccess={handleRecurringSubscriptionSuccess}
                                         onError={handleSubscriptionError}
                                         setIsProcessing={setIsProcessing}
                                         layout={windowWidth < 768 ? "col" : "row"}
+                                        selectedPlan={selectedPlan}
                                     />
                                 </div>
                             )}
                         </Card>
                     )}
+                    </div>
                     
                     {subscribed && (
                         <>
@@ -184,7 +220,7 @@ const UserSubscription = () => {
                         </>
                     )}
 
-                    <Card title="Frequently Asked Questions" className="mb-6">
+                    <Card title="Frequently Asked Questions" className="mb-6 border border-gray-600 rounded-lg">
                         <div className="flex flex-col gap-4">
                             <div>
                                 <h3 className="text-lg font-semibold">How does the subscription work?</h3>
@@ -227,6 +263,7 @@ const UserSubscription = () => {
                 visible={renewSubscriptionVisible}
                 onHide={() => setRenewSubscriptionVisible(false)}
                 subscribedUntil={subscribedUntil}
+                selectedPlan={selectedPlan}
             />
             <Nip05Form
                 visible={nip05Visible}

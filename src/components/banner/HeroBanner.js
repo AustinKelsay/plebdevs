@@ -8,7 +8,6 @@ import { Avatar } from 'primereact/avatar';
 import { AvatarGroup } from 'primereact/avatargroup';
 import GenericButton from '../buttons/GenericButton';
 import HeroImage from '../../../public/images/hero-image.png';
-import plebdevsGuy from '../../../public/images/plebdevs-guy.png';
 
 const HeroBanner = () => {
     const [currentTech, setCurrentTech] = useState('Bitcoin');

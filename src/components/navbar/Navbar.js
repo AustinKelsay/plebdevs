@@ -20,7 +20,7 @@ const Navbar = () => {
             <div onClick={() => router.push('/')} className="flex flex-row items-center justify-center cursor-pointer">
                 <Image
                     alt="logo"
-                    src="/images/plebdevs-guy.png"
+                    src="/images/plebdevs-icon.png"
                     width={50}
                     height={50}
                     className="rounded-full mr-2 max-tab:hidden max-mob:hidden"

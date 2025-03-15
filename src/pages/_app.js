@@ -11,7 +11,6 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
-import Sidebar from '@/components/sidebar/Sidebar';
 import { useRouter } from 'next/router';
 import { NDKProvider } from '@/context/NDKContext';
 import { Analytics } from '@vercel/analytics/react';
@@ -26,12 +25,7 @@ const queryClient = new QueryClient()
 export default function MyApp({
     Component, pageProps: { session, ...pageProps }
 }) {
-    const [isCourseView, setIsCourseView] = useState(false);
     const router = useRouter();
-
-    useEffect(() => {
-        setIsCourseView(router.pathname.includes('course') && !router.pathname.includes('draft'));
-    }, [router.pathname]);
 
     return (
         <PrimeReactProvider>
@@ -42,13 +36,10 @@ export default function MyApp({
                             <Layout>
                                 <div className="flex flex-col min-h-screen">
                                     <Navbar />
-                                    <div className='flex'>
-                                        <Sidebar course={isCourseView} />
-                                        <div className='w-[100vw] pl-[14vw] max-sidebar:pl-0 pb-16 max-sidebar:pb-20'>
-                                            <Component {...pageProps} />
-                                            <Analytics />
-                                        </div>
-                                    </div>
+                                    <main className="flex-1 container mx-auto px-4 py-4">
+                                        <Component {...pageProps} />
+                                        <Analytics />
+                                    </main>
                                     <BottomBar />
                                 </div>
                             </Layout>

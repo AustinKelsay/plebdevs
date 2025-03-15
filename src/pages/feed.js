@@ -30,7 +30,6 @@ const Feed = () => {
         setTitle(router.query.channel);
     }, [router.query.channel]);
 
-    // initialize the selected topic to the query parameter
     useEffect(() => {
         setSelectedTopic(router.query.channel);
     }, [router.query.channel]);
@@ -51,8 +50,8 @@ const Feed = () => {
     };
 
     return (
-        <div className="h-[100vh] w-[100vw] min-bottom-bar:w-[86vw]">
-            <div className="w-[100vw] min-bottom-bar:w-[86vw] px-4 pt-4 flex flex-col items-start">
+        <div className="w-full max-w-5xl mx-auto">
+            <div className="mb-6">
                 <div className='mb-4 flex flex-row items-end'>
                     <h1 className="font-bold mb-0">Feeds</h1>
                     <GenericButton
@@ -88,20 +87,14 @@ const Feed = () => {
                 items={allTopics}
                 selectedTopic={selectedTopic}
                 onTabChange={handleTopicChange}
-                className="max-w-[90%] mx-auto"
+                className="mb-4"
             />
-            {
-                selectedTopic === 'global' && <GlobalFeed searchQuery={searchQuery} />
-            }
-            {
-                selectedTopic === 'nostr' && <NostrFeed searchQuery={searchQuery} />
-            }
-            {
-                selectedTopic === 'discord' && <DiscordFeed searchQuery={searchQuery} />
-            }
-            {
-                selectedTopic === 'stackernews' && <StackerNewsFeed searchQuery={searchQuery} />
-            }
+            <div className="feed-content">
+                {selectedTopic === 'global' && <GlobalFeed searchQuery={searchQuery} />}
+                {selectedTopic === 'nostr' && <NostrFeed searchQuery={searchQuery} />}
+                {selectedTopic === 'discord' && <DiscordFeed searchQuery={searchQuery} />}
+                {selectedTopic === 'stackernews' && <StackerNewsFeed searchQuery={searchQuery} />}
+            </div>
         </div>
     );
 };

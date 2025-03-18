@@ -83,17 +83,17 @@ export default function VideosCarousel() {
 
     return (
         <>
-            <h3 className={`ml-[6%] mt-4 max-mob:text-3xl max-mob:ml-10`}>Videos</h3>
-            <Divider className={`${isMobileView ? '' : 'hidden'}`} />
+            <h3 className={`ml-[3%] mt-4 max-mob:text-2xl max-tab:ml-10 max-mob:ml-5`}>Videos</h3>
+            <Divider className='w-[95%] mx-auto max-tab:hidden max-mob:w-[100%]' />
             <Carousel 
                 value={videosLoading || !processedVideos.length ? [{}, {}, {}] : [...processedVideos]}
                 numVisible={2}
                 pt={{
                     previousButton: {
-                        className: isMobileView ? 'm-0' : ''
+                        className: 'm-0'
                     },
                     nextButton: {
-                        className: isMobileView ? 'm-0' : ''
+                        className: 'm-0'
                     }
                 }}
                 itemTemplate={(item) => 

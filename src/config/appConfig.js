@@ -9,7 +9,7 @@ const appConfig = {
       "wss://purplerelay.com/",
       "wss://relay.devs.tools/"
     ],
-    authorPubkeys: ["f33c8a9617cb15f705fc70cd461cfd6eaf22f9e24c33eabad981648e5ec6f741", "c67cd3e1a83daa56cff16f635db2fdb9ed9619300298d4701a58e68e84098345"],
+    authorPubkeys: ["f33c8a9617cb15f705fc70cd461cfd6eaf22f9e24c33eabad981648e5ec6f741", "c67cd3e1a83daa56cff16f635db2fdb9ed9619300298d4701a58e68e84098345", "6260f29fa75c91aaa292f082e5e87b438d2ab4fdf96af398567b01802ee2fcd4"],
     customLightningAddresses: [
       {
         // todo remove need for lowercase

@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import Image from 'next/image';
 import { getSession, signIn, useSession } from 'next-auth/react';
-import { useImageProxy } from '@/hooks/useImageProxy';
 import { useRouter } from 'next/router';
 import { Avatar } from 'primereact/avatar';
 import { AvatarGroup } from 'primereact/avatargroup';
@@ -15,7 +14,6 @@ const HeroBanner = () => {
     const techs = ['Bitcoin', 'Lightning', 'Nostr'];
     const windowWidth = useWindowWidth();
     const router = useRouter();
-    const { returnImageProxy } = useImageProxy();
     const { data: session } = useSession();
     
     const isTabView = windowWidth <= 1360;
@@ -48,10 +46,10 @@ const HeroBanner = () => {
     };
 
     const getHeroHeight = () => {
-        if (isSuperWideScreen) return 'h-[900px]';
-        if (isWideScreen) return 'h-[700px]';
-        if (isMobile) return 'h-[450px]';
-        return 'h-[600px]';
+        if (isSuperWideScreen) return 'h-[700px]';
+        if (isWideScreen) return 'h-[550px]';
+        if (isMobile) return 'h-[400px]';
+        return 'h-[500px]';
     };
 
     const handleLearnToCode = async () => {
@@ -105,7 +103,7 @@ const HeroBanner = () => {
     };
 
     return (
-        <div className={`${getHeroHeight()} ${isTabView ? 'mx-0' : 'm-14'} relative flex justify-center items-center overflow-hidden drop-shadow-2xl`}>
+        <div className={`${getHeroHeight()} ${isTabView ? 'mx-0 w-full' : 'm-4'} relative flex justify-center items-center overflow-hidden drop-shadow-2xl rounded-lg`}>
             <Image
                 src={HeroImage}
                 alt="Banner"
@@ -117,7 +115,7 @@ const HeroBanner = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-black via-black/20 to-transparent rounded-lg" />
 
             {!isTabView && (
-                <div className="absolute right-0 top-24 bottom-0 w-1/2 overflow-hidden rounded-l-lg opacity-100 p-2 rounded-lg shadow-lg mr-2">
+                <div className="absolute right-0 top-auto bottom-auto w-1/2 overflow-hidden opacity-100 p-4 shadow-lg">
                     <video
                         className="w-full object-cover rounded-lg shadow-lg"
                         autoPlay
@@ -132,8 +130,8 @@ const HeroBanner = () => {
                 </div>
             )}
 
-            <div className={`absolute inset-0 flex flex-col justify-center ${isTabView ? 'items-center text-center' : 'items-start pl-8'}`}>
-                <h1 className={`text-4xl sm:text-4xl lg:text-6xl font-bold leading-tight mb-6 ${isTabView ? 'px-4' : 'max-w-[50%]'}`}>
+            <div className={`absolute inset-0 flex flex-col justify-center ${isTabView ? 'items-center text-center px-4' : 'items-start pl-8'}`}>
+                <h1 className={`text-4xl sm:text-4xl lg:text-6xl font-bold leading-tight mb-4 ${isTabView ? 'px-4' : 'max-w-[50%]'}`}>
                     <span className="block">Learn to code</span>
                     <span className={`block ${isTabView ? `transition-opacity duration-500 ${isAnimating ? 'opacity-0' : 'opacity-100'}` : ''}`}>
                         Build on{' '}
@@ -144,16 +142,16 @@ const HeroBanner = () => {
                     <span className="block">Become a dev</span>
                 </h1>
                 {isMobile ? (
-                    <h3 className="text-[#f8f8ff] mb-8 font-semibold">
+                    <h3 className="text-[#f8f8ff] mb-6 font-semibold">
                         A one of a kind developer education, content, and community platform built on Nostr and fully Lightning integrated.
                     </h3>
                 ) : (
-                    <h2 className="text-[#f8f8ff] mb-8 font-semibold max-w-[42%]">
+                    <h2 className="text-[#f8f8ff] mb-6 font-semibold max-w-[42%]">
                         A one of a kind developer education, content, and community platform built on Nostr and fully Lightning integrated.
                     </h2>
                 )}
                 <div 
-                    className="mb-8 flex flex-row hover:opacity-70 cursor-pointer"
+                    className="mb-6 flex flex-row hover:opacity-70 cursor-pointer"
                     onClick={() => !isMobile && window.open('https://www.udemy.com/user/austin-james-kelsay/', '_blank')}
                     style={{ cursor: isMobile ? 'default' : 'pointer' }}
                 >
@@ -180,21 +178,10 @@ const HeroBanner = () => {
                         label="Learn To Code"
                         icon={<i className="pi pi-book pr-2 text-2xl" />}
                         rounded
-                        severity="info"
-                        className="border-2"
-                        size={isMobile ? null : "large"}
-                        outlined
-                        onClick={handleLearnToCode}
-                    />
-                    <GenericButton
-                        label="Level Up"
-                        icon={<i className="pi pi-video pr-2 text-2xl" />}
-                        rounded
-                        size={isMobile ? null : "large"}
                         severity="success"
                         className="border-2"
                         outlined
-                        onClick={() => router.push('/content?tag=all')}
+                        onClick={handleLearnToCode}
                     />
                 </div>
             </div>

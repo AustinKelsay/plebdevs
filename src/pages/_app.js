@@ -36,7 +36,7 @@ export default function MyApp({
                             <Layout>
                                 <div className="flex flex-col min-h-screen">
                                     <Navbar />
-                                    <main className="flex-1 container mx-auto px-4 py-4">
+                                    <main>
                                         <Component {...pageProps} />
                                         <Analytics />
                                     </main>

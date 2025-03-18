@@ -70,7 +70,7 @@ const UserAvatar = () => {
                     // Only show the "Create" option for admin users
                     ...(isAdmin ? [{
                         label: 'Create',
-                        icon: 'pi pi-book',
+                        icon: 'pi pi-file-edit',
                         command: () => router.push('/create')
                     }] : []),
                     {
@@ -84,14 +84,6 @@ const UserAvatar = () => {
         userAvatar = (
             <>
                 <div className='flex flex-row items-center justify-between'>
-                    <GenericButton
-                        outlined
-                        rounded
-                        label="About"
-                        className='mr-4'
-                        onClick={() => router.push('/about')}
-                        size={windowWidth < 768 ? 'small' : 'normal'}
-                    />
                     <div onClick={(event) => menu.current.toggle(event)} className={`flex flex-row items-center justify-between cursor-pointer hover:opacity-75`}>
                         <Image
                             alt="logo"
@@ -112,14 +104,6 @@ const UserAvatar = () => {
     } else {
         userAvatar = (
             <div className='flex flex-row items-center justify-between'>
-                <GenericButton
-                    outlined
-                    rounded
-                    label="About"
-                    className='mr-4'
-                    onClick={() => router.push('/about')}
-                    size={windowWidth < 768 ? 'small' : 'normal'}
-                />
                 <GenericButton
                     label="Login"
                     icon="pi pi-user"

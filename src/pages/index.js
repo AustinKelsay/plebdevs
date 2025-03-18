@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import React, { useEffect, useState, useMemo } from 'react';
-// import GenericCarousel from '@/components/content/carousels/GenericCarousel';
 import CoursesCarousel from '@/components/content/carousels/CoursesCarousel';
 import VideosCarousel from '@/components/content/carousels/VideosCarousel';
 import DocumentsCarousel from '@/components/content/carousels/DocumentsCarousel';

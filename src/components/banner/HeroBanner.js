@@ -103,7 +103,7 @@ const HeroBanner = () => {
     };
 
     return (
-        <div className={`${getHeroHeight()} ${isTabView ? 'mx-0 w-full' : 'm-4'} relative flex justify-center items-center overflow-hidden drop-shadow-2xl rounded-lg`}>
+        <div className={`${getHeroHeight()} ${isTabView ? 'mx-0 w-full' : 'mt-4 mx-12'} relative flex justify-center items-center overflow-hidden drop-shadow-2xl rounded-lg`}>
             <Image
                 src={HeroImage}
                 alt="Banner"

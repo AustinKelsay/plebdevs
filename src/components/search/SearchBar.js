@@ -10,7 +10,6 @@ import { useContentSearch } from '@/hooks/useContentSearch';
 import { useCommunitySearch } from '@/hooks/useCommunitySearch';
 import { useRouter } from 'next/router';
 import useWindowWidth from '@/hooks/useWindowWidth';
-import styles from './searchbar.module.css';
 
 const SearchBar = () => {
     const { searchContent, searchResults: contentResults } = useContentSearch();
@@ -77,7 +76,7 @@ const SearchBar = () => {
     }
 
     return (
-        <div className={`absolute ${windowWidth < 700 ? "left-[40%]" : "left-[50%]"} transform -translate-x-[50%]`}>
+        <div className={`absolute ${windowWidth < 950 ? "left-[55%]" : "left-[50%]"} transform -translate-x-[50%]`}>
             <IconField iconPosition="left">
                 <InputIcon className="pi pi-search"> </InputIcon>
                 <InputText 
@@ -101,7 +100,6 @@ const SearchBar = () => {
                             className: 'mx-0 px-0 shadow-lg'
                         }
                     }}
-                    className={styles.dropdown}
                     value={selectedSearchOption} 
                     onChange={(e) => setSelectedSearchOption(e.value)} 
                     options={searchOptions} 

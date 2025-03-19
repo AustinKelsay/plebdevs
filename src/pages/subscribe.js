@@ -18,7 +18,7 @@ import RenewSubscription from "@/components/profile/subscription/RenewSubscripti
 import Nip05Form from "@/components/profile/subscription/Nip05Form";
 import LightningAddressForm from "@/components/profile/subscription/LightningAddressForm";
 
-import MoreInfo from '@/components/MoreInfo';
+import MoreInfo from "@/components/MoreInfo";
 
 const Subscribe = () => {
   const { data: session, update } = useSession();
@@ -212,22 +212,26 @@ const Subscribe = () => {
             />
             {/* Test MoreInfo modal blur here */}
             {/* <div className="flex items-center gap-2">
-                            <Message className="w-fit" severity="info" text="Login to manage your subscription" />
-                            <MoreInfo 
-                                tooltip="About Subscriptions"
-                                modalTitle="Subscription Information"
-                                modalBody={
-                                    <div className="space-y-3">
-                                        <p>As a PlebDevs subscriber, you get access to:</p>
-                                        <ul className="list-disc pl-4">
-                                            <li>Full access to all courses and content</li>
-                                            <li>Exclusive developer resources</li>
-                                            <li>Priority support</li>
-                                            <li>Community features</li>
-                                        </ul>
-                                    </div>
-                                }
-                            />
+              <Message
+                className="w-fit"
+                severity="info"
+                text="Login to manage your subscription"
+              />
+              <MoreInfo
+                tooltip="About Subscriptions"
+                modalTitle="Subscription Information"
+                modalBody={
+                  <div className="space-y-3">
+                    <p>As a PlebDevs subscriber, you get access to:</p>
+                    <ul className="list-disc pl-4">
+                      <li>Full access to all courses and content</li>
+                      <li>Exclusive developer resources</li>
+                      <li>Priority support</li>
+                      <li>Community features</li>
+                    </ul>
+                  </div>
+                }
+              />
             </div> */}
           </div>
         )}

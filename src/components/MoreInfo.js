@@ -2,21 +2,31 @@ import React, { useState, useEffect } from "react";
 import { Dialog } from "primereact/dialog";
 import { Tooltip } from "primereact/tooltip";
 import useWindowWidth from "@/hooks/useWindowWidth";
-import styles from "./moreinfo.module.css";
 
 const MoreInfo = ({ tooltip, modalTitle, modalBody, className = "" }) => {
   const [visible, setVisible] = useState(false);
   const windowWidth = useWindowWidth();
   const isMobile = windowWidth < 768;
 
-  // Add blur effect when modal is visible
   useEffect(() => {
     const mainContent = document.querySelector(".main-content");
     if (mainContent) {
       if (visible) {
-        mainContent.classList.add(styles.blurredContent);
+        mainContent.classList.add(
+          "filter",
+          "blur-md",
+          "transition-all",
+          "duration-200",
+          "ease-in-out"
+        );
       } else {
-        mainContent.classList.remove(styles.blurredContent);
+        mainContent.classList.remove(
+          "filter",
+          "blur-md",
+          "transition-all",
+          "duration-200",
+          "ease-in-out"
+        );
       }
     }
   }, [visible]);
@@ -43,11 +53,11 @@ const MoreInfo = ({ tooltip, modalTitle, modalBody, className = "" }) => {
         onHide={onHide}
         className="max-w-3xl"
         modal
-        dismissableMask // This enables click-outside-to-close
-        closeOnEscape // This enables closing with Escape key
+        dismissableMask
+        closeOnEscape
         breakpoints={{ "960px": "75vw", "641px": "90vw" }}
         pt={{
-          mask: { className: "backdrop-blur-none" }, // Ensures the Dialog's mask doesn't add its own blur
+          mask: { className: "backdrop-blur-none" },
         }}
       >
         {typeof modalBody === "string" ? (

@@ -149,3 +149,31 @@ code {
 div.react-flow__attribution {
   display: none !important;
 }
+
+/* Dialog backdrop styles */
+.p-dialog-mask {
+    backdrop-filter: blur(8px);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.p-dialog {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.p-dialog-header {
+    background: #1e1e1e;
+    border-bottom: 1px solid #333;
+    color: #fff;
+}
+
+.p-dialog-content {
+    background: #1e1e1e;
+    color: #fff;
+}
+
+.p-dialog-footer {
+    background: #1e1e1e;
+    border-top: 1px solid #333;
+}

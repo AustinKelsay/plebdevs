@@ -5,18 +5,16 @@ import CourseDetails from '@/components/content/courses/CourseDetails';
 import VideoLesson from '@/components/content/courses/VideoLesson';
 import DocumentLesson from '@/components/content/courses/DocumentLesson';
 import CombinedLesson from '@/components/content/courses/CombinedLesson';
+import CourseSidebar from '@/components/content/courses/CourseSidebar';
 import { useNDKContext } from '@/context/NDKContext';
 import { useSession } from 'next-auth/react';
-import axios from 'axios';
-import { nip04, nip19 } from 'nostr-tools';
+import { nip19 } from 'nostr-tools';
 import { useToast } from '@/hooks/useToast';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { Accordion, AccordionTab } from 'primereact/accordion';
-import { Tag } from 'primereact/tag';
 import { useDecryptContent } from '@/hooks/encryption/useDecryptContent';
 import dynamic from 'next/dynamic';
 import { Button } from 'primereact/button';
-import useWindowWidth from "@/hooks/useWindowWidth";
+import useWindowWidth from '@/hooks/useWindowWidth';
 
 const MDDisplay = dynamic(() => import('@uiw/react-markdown-preview'), { ssr: false });
 
@@ -171,8 +169,12 @@ const Course = () => {
   const { ndk, addSigner } = useNDKContext();
   const { data: session, update } = useSession();
   const { showToast } = useToast();
-  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [completedLessons, setCompletedLessons] = useState([]);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const windowWidth = useWindowWidth();
+  const isMobileView = windowWidth <= 968;
+  const [activeTab, setActiveTab] = useState('content'); // Default to content tab on mobile
 
   const setCompleted = useCallback(lessonId => {
     setCompletedLessons(prev => [...prev, lessonId]);
@@ -212,21 +214,29 @@ const Course = () => {
     if (router.isReady) {
       const { active } = router.query;
       if (active !== undefined) {
-        setExpandedIndex(parseInt(active, 10));
+        setActiveIndex(parseInt(active, 10));
       } else {
-        setExpandedIndex(null);
+        setActiveIndex(0);
+      }
+
+      // Auto-open sidebar on desktop, close on mobile
+      setSidebarVisible(!isMobileView);
+
+      // Reset to content tab when switching to mobile
+      if (isMobileView) {
+        setActiveTab('content');
       }
     }
-  }, [router.isReady, router.query]);
+  }, [router.isReady, router.query, isMobileView]);
 
-  const handleAccordionChange = e => {
-    const newIndex = e.index === expandedIndex ? null : e.index;
-    setExpandedIndex(newIndex);
+  const handleLessonSelect = index => {
+    setActiveIndex(index);
+    router.push(`/course/${router.query.slug}?active=${index}`, undefined, { shallow: true });
 
-    if (newIndex !== null) {
-      router.push(`/course/${router.query.slug}?active=${newIndex}`, undefined, { shallow: true });
-    } else {
-      router.push(`/course/${router.query.slug}`, undefined, { shallow: true });
+    // On mobile, switch to content tab after selection
+    if (isMobileView) {
+      setActiveTab('content');
+      setSidebarVisible(false);
     }
   };
 
@@ -245,6 +255,15 @@ const Course = () => {
       'Payment Error',
       `Failed to purchase course. Please try again. Error: ${error}`
     );
+  };
+
+  const toggleTab = tab => {
+    setActiveTab(tab);
+    if (tab === 'lessons') {
+      setSidebarVisible(true);
+    } else {
+      setSidebarVisible(false);
+    }
   };
 
   if (courseLoading || decryptionLoading) {
@@ -301,40 +320,72 @@ const Course = () => {
           handlePaymentError={handlePaymentError}
         />
       )}
-      <Accordion
-        activeIndex={expandedIndex}
-        onTabChange={handleAccordionChange}
-        className="mt-4 px-4 max-mob:px-0 max-tab:px-0"
-      >
-        {uniqueLessons.length > 0 &&
-          uniqueLessons.map((lesson, index) => (
-            <AccordionTab
-              key={index}
-              pt={{
-                root: { className: 'border-none' },
-                header: { className: 'border-none' },
-                headerAction: { className: 'border-none' },
-                content: { className: 'border-none max-mob:px-0 max-tab:px-0' },
-                accordiontab: { className: 'border-none' },
-              }}
-              header={
-                <div className="flex align-items-center justify-between w-full">
-                  <span
-                    id={`lesson-${index}`}
-                    className="font-bold text-xl"
-                  >{`Lesson ${index + 1}: ${lesson.title}`}</span>
-                  {completedLessons.includes(lesson.id) ? (
-                    <Tag severity="success" value="Completed" />
-                  ) : null}
-                </div>
-              }
+
+      <div className="mx-4">
+        {/* Mobile tab navigation */}
+        {isMobileView && (
+          <div className="flex w-full border-b border-gray-200 dark:border-gray-700 mb-4">
+            <button
+              className={`flex-1 py-3 font-medium text-center border-b-2 ${
+                activeTab === 'lessons'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+              onClick={() => toggleTab('lessons')}
             >
-              <div className="w-full py-4 rounded-b-lg">{renderLesson(lesson)}</div>
-            </AccordionTab>
-          ))}
-      </Accordion>
-      <div className="mx-auto my-6">
-        {course?.content && <MDDisplay className="p-4 rounded-lg" source={course.content} />}
+              Course Lessons
+            </button>
+            <button
+              className={`flex-1 py-3 font-medium text-center border-b-2 ${
+                activeTab === 'content'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+              onClick={() => toggleTab('content')}
+            >
+              Lesson Content
+            </button>
+          </div>
+        )}
+
+        <div className="flex relative">
+          {/* Course Sidebar Component */}
+          <CourseSidebar
+            lessons={uniqueLessons}
+            activeIndex={activeIndex}
+            onLessonSelect={handleLessonSelect}
+            completedLessons={completedLessons}
+            isMobileView={isMobileView}
+            onClose={() => {
+              setSidebarVisible(false);
+              if (isMobileView) setActiveTab('content');
+            }}
+            sidebarVisible={sidebarVisible}
+          />
+
+          {/* Main content */}
+          <div
+            className={`transition-all duration-200 ${
+              !isMobileView ? 'ml-8 flex-1' : activeTab === 'content' ? 'w-full' : 'w-full hidden'
+            }`}
+          >
+            {uniqueLessons.length > 0 && uniqueLessons[activeIndex] ? (
+              <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                {renderLesson(uniqueLessons[activeIndex])}
+              </div>
+            ) : (
+              <div className="text-center bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-8">
+                <p>Select a lesson from the sidebar to begin learning.</p>
+              </div>
+            )}
+
+            {course?.content && (
+              <div className="mt-8 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <MDDisplay className="p-4 rounded-lg" source={course.content} />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );

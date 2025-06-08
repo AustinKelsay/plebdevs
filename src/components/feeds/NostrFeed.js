@@ -7,20 +7,27 @@ import NostrIcon from '../../../public/images/nostr.png';
 import Image from 'next/image';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import { nip19 } from 'nostr-tools';
-import { useCommunityNotes } from '@/hooks/nostr/useCommunityNotes';
+import { useCommunityChannel } from '@/hooks/nostr/useCommunityChannel';
 import CommunityMessage from '@/components/feeds/messages/CommunityMessage';
+import ChannelMessageInput from '@/components/feeds/ChannelMessageInput';
+import ChannelCreator from '@/components/admin/ChannelCreator';
+import appConfig from '@/config/appConfig';
 
 const NostrFeed = ({ searchQuery }) => {
-  const { communityNotes, isLoading, error } = useCommunityNotes();
+  const { channelMessages, channelMetadata, currentChannelId, isLoading, error } = useCommunityChannel();
   const { ndk } = useNDKContext();
   const { data: session } = useSession();
   const [authorData, setAuthorData] = useState({});
 
   const windowWidth = useWindowWidth();
 
+  // Check if current user is authorized to create channels
+  const isAuthorized = session?.user?.pubkey && 
+    appConfig.authorPubkeys.includes(session.user.pubkey);
+
   useEffect(() => {
     const fetchAuthors = async () => {
-      for (const message of communityNotes) {
+      for (const message of channelMessages) {
         if (!authorData[message.pubkey]) {
           const author = await fetchAuthor(message.pubkey);
           setAuthorData(prevData => ({
@@ -31,10 +38,10 @@ const NostrFeed = ({ searchQuery }) => {
       }
     };
 
-    if (communityNotes && communityNotes.length > 0) {
+    if (channelMessages && channelMessages.length > 0) {
       fetchAuthors();
     }
-  }, [communityNotes, authorData]);
+  }, [channelMessages, authorData]);
 
   const fetchAuthor = async pubkey => {
     try {
@@ -74,7 +81,7 @@ const NostrFeed = ({ searchQuery }) => {
     );
   }
 
-  const filteredNotes = communityNotes
+  const filteredMessages = channelMessages
     .filter(message =>
       searchQuery ? message.content.toLowerCase().includes(searchQuery.toLowerCase()) : true
     )
@@ -82,9 +89,31 @@ const NostrFeed = ({ searchQuery }) => {
 
   return (
     <div className="h-full w-full">
+      {channelMetadata && (
+        <div className="mx-0 mt-2 mb-4 p-3 bg-gray-800 rounded-lg">
+          <h3 className="text-lg font-semibold text-white">{channelMetadata.name}</h3>
+          {channelMetadata.about && (
+            <p className="text-sm text-gray-300 mt-1">{channelMetadata.about}</p>
+          )}
+        </div>
+      )}
+      
+      {!currentChannelId && isAuthorized && !isLoading && (
+        <div className="mx-0 mb-4">
+          <ChannelCreator />
+        </div>
+      )}
+      
+      <div className="mx-0 mb-4">
+        <ChannelMessageInput 
+          channelId={currentChannelId}
+          disabled={!currentChannelId || isLoading}
+        />
+      </div>
+      
       <div className="mx-0 mt-4">
-        {filteredNotes.length > 0 ? (
-          filteredNotes.map(message => (
+        {filteredMessages.length > 0 ? (
+          filteredMessages.map(message => (
             <CommunityMessage
               key={message.id}
               message={{
@@ -94,7 +123,7 @@ const NostrFeed = ({ searchQuery }) => {
                 avatar: authorData[message.pubkey]?.avatar,
                 content: message.content,
                 timestamp: message.created_at * 1000,
-                channel: 'plebdevs',
+                channel: channelMetadata?.name || 'PlebDevs Community',
               }}
               searchQuery={searchQuery}
               windowWidth={windowWidth}
@@ -106,7 +135,9 @@ const NostrFeed = ({ searchQuery }) => {
             />
           ))
         ) : (
-          <div className="text-gray-400 text-center p-4">No messages available.</div>
+          <div className="text-gray-400 text-center p-4">
+            {isLoading ? 'Loading channel messages...' : 'No messages available in this channel.'}
+          </div>
         )}
       </div>
     </div>

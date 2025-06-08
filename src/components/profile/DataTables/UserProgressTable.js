@@ -1,6 +1,5 @@
 import React from 'react';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import GenericDataTable from '@/components/ui/DataTables/DataTable';
 import ProgressListItem from '@/components/content/lists/ProgressListItem';
 import { formatDateTime } from '@/utils/time';
 import { ProgressSpinner } from 'primereact/progressspinner';
@@ -92,7 +91,7 @@ const UserProgressTable = ({ session, ndk }) => {
     return progressData.sort((a, b) => new Date(b.date) - new Date(a.date));
   };
 
-  const header = (
+  const tableHeader = (
     <div className="flex flex-wrap align-items-center justify-content-between gap-2">
       <span className="text-xl text-900 font-bold text-[#f8f8ff]">Progress</span>
     </div>
@@ -161,6 +160,13 @@ const UserProgressTable = ({ session, ndk }) => {
     );
   };
 
+  const columns = [
+    { field: 'type', header: 'Type', body: typeTemplate },
+    { field: 'eventType', header: 'Event', body: eventTemplate },
+    { field: 'name', header: 'Name', body: nameTemplate },
+    { field: 'date', header: 'Date', body: dateTemplate },
+  ];
+
   if (!session || !session?.user || !ndk) {
     return (
       <div className="w-full h-full flex items-center justify-center">
@@ -170,10 +176,11 @@ const UserProgressTable = ({ session, ndk }) => {
   }
 
   return (
-    <DataTable
+    <GenericDataTable
       emptyMessage="No Courses or Milestones completed"
       value={prepareProgressData()}
-      header={header}
+      header={tableHeader}
+      columns={columns}
       className="mt-2 mx-2 max-lap:mx-0"
       style={{
         width: '100%',
@@ -199,12 +206,10 @@ const UserProgressTable = ({ session, ndk }) => {
         },
       }}
       stripedRows
+      dataKey="id"
     >
-      <Column field="type" header="Type" body={typeTemplate}></Column>
-      <Column field="eventType" header="Event" body={eventTemplate}></Column>
-      <Column field="name" header="Name" body={nameTemplate}></Column>
-      <Column field="date" body={dateTemplate} header="Date"></Column>
-    </DataTable>
+      {/* Original Column definitions removed */}
+    </GenericDataTable>
   );
 };
 

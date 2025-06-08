@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import GenericDataTable from '@/components/ui/DataTables/DataTable';
 import { InputText } from 'primereact/inputtext';
 import GenericButton from '@/components/buttons/GenericButton';
 import { useToast } from '@/hooks/useToast';
@@ -54,7 +53,7 @@ const UserRelaysTable = ({ ndk, userRelays, setUserRelays, reInitializeNDK }) =>
     }
   };
 
-  const header = (
+  const tableHeader = (
     <div className="text-[#f8f8ff]">
       <div className="flex items-center justify-between">
         <div>
@@ -62,9 +61,10 @@ const UserRelaysTable = ({ ndk, userRelays, setUserRelays, reInitializeNDK }) =>
         </div>
         <GenericButton
           outlined
-          icon="pi pi-plus"
-          label="Add Relay"
+          icon={collapsed ? 'pi pi-plus' : 'pi pi-minus'}
+          label={collapsed ? 'Add Relay' : 'Hide'}
           severity="success"
+          className="w-fit"
           onClick={() => setCollapsed(!collapsed)}
         />
       </div>
@@ -77,11 +77,13 @@ const UserRelaysTable = ({ ndk, userRelays, setUserRelays, reInitializeNDK }) =>
             onChange={e => setNewRelayUrl(e.target.value)}
             className="flex-1"
           />
-          <GenericButton label="+" severity="success" outlined onClick={addRelay} />
+          <GenericButton className="w-fit" label="+" severity="success" outlined onClick={addRelay} />
         </div>
       )}
     </div>
   );
+
+  const relayUrlBody = rowData => rowData;
 
   const relayStatusBody = url => {
     const isConnected = relayStatuses[url];
@@ -118,13 +120,23 @@ const UserRelaysTable = ({ ndk, userRelays, setUserRelays, reInitializeNDK }) =>
     );
   };
 
+  // Define columns for GenericDataTable
+  const columns = [
+    { field: 'url', header: 'Relay URL', body: relayUrlBody },
+    { header: 'Status', body: relayStatusBody },
+    { header: 'Actions', body: relayActionsBody },
+  ];
+
   return (
     <div className="w-full">
-      <DataTable value={userRelays} className="border-none" header={header}>
-        <Column field={url => url} header="Relay URL"></Column>
-        <Column body={relayStatusBody} header="Status"></Column>
-        <Column body={relayActionsBody} header="Actions"></Column>
-      </DataTable>
+      <GenericDataTable
+        value={userRelays}
+        columns={columns}
+        className="border-none"
+        header={tableHeader}
+        dataKey={rowData => rowData}
+      >
+      </GenericDataTable>
     </div>
   );
 };

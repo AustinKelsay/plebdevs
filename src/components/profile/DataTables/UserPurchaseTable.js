@@ -1,6 +1,5 @@
 import React from 'react';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import GenericDataTable from '@/components/ui/DataTables/DataTable';
 import PurchasedListItem from '@/components/content/lists/PurchasedListItem';
 import { formatDateTime } from '@/utils/time';
 
@@ -47,13 +46,22 @@ const UserPurchaseTable = ({ session, windowWidth }) => {
     );
   };
 
+  // Define columns for GenericDataTable
+  const columns = [
+    { field: 'amountPaid', header: 'Cost', body: costTemplate },
+    { field: 'name', header: 'Name', body: nameTemplate },
+    { field: 'category', header: 'Category', body: categoryTemplate },
+    { field: 'createdAt', header: 'Date', body: dateTemplate },
+  ];
+
   return (
     session &&
     session?.user && (
-      <DataTable
+      <GenericDataTable
         emptyMessage="No purchases"
         value={session.user?.purchased}
         header={purchasesHeader}
+        columns={columns}
         className="mt-2 mx-2 max-lap:mx-0"
         style={{
           width: '100%',
@@ -80,11 +88,8 @@ const UserPurchaseTable = ({ session, windowWidth }) => {
         }}
         stripedRows
       >
-        <Column field="amountPaid" header="Cost" body={costTemplate}></Column>
-        <Column field="name" header="Name" body={nameTemplate}></Column>
-        <Column field="category" header="Category" body={categoryTemplate}></Column>
-        <Column field="createdAt" header="Date" body={dateTemplate}></Column>
-      </DataTable>
+        {/* Original Column definitions removed */}
+      </GenericDataTable>
     )
   );
 };

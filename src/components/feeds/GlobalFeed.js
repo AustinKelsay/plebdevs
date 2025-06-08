@@ -4,7 +4,7 @@ import { useDiscordQuery } from '@/hooks/communityQueries/useDiscordQuery';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useRouter } from 'next/router';
-import { useCommunityNotes } from '@/hooks/nostr/useCommunityNotes';
+import { useCommunityChannel } from '@/hooks/nostr/useCommunityChannel';
 import { useNDKContext } from '@/context/NDKContext';
 import { findKind0Fields } from '@/utils/nostr';
 import NostrIcon from '../../../public/images/nostr.png';
@@ -54,10 +54,10 @@ const GlobalFeed = ({ searchQuery }) => {
     isLoading: stackerNewsLoading,
   } = useQuery({ queryKey: ['stackerNews'], queryFn: fetchStackerNews });
   const {
-    communityNotes: nostrData,
+    channelMessages: nostrData,
     error: nostrError,
     isLoading: nostrLoading,
-  } = useCommunityNotes();
+  } = useCommunityChannel();
   const { ndk } = useNDKContext();
   const { returnImageProxy } = useImageProxy();
   const windowWidth = useWindowWidth();
@@ -172,7 +172,7 @@ const GlobalFeed = ({ searchQuery }) => {
                     ? item.channel
                     : item.type === 'stackernews'
                       ? '~devs'
-                      : '#plebdevs',
+                      : 'PlebDevs Community',
               }}
               searchQuery={searchQuery}
               windowWidth={windowWidth}

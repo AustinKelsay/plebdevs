@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDiscordQuery } from '@/hooks/communityQueries/useDiscordQuery';
-import { useCommunityNotes } from '@/hooks/nostr/useCommunityNotes';
+import { useCommunityChannel } from '@/hooks/nostr/useCommunityChannel';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
@@ -12,7 +12,7 @@ const fetchStackerNews = async () => {
 export const useCommunitySearch = () => {
   const [searchResults, setSearchResults] = useState([]);
   const { data: discordData } = useDiscordQuery({ page: 1 });
-  const { communityNotes: nostrData } = useCommunityNotes();
+  const { channelMessages: nostrData } = useCommunityChannel();
   const { data: stackerNewsData } = useQuery({
     queryKey: ['stackerNews'],
     queryFn: fetchStackerNews,

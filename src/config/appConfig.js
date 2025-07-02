@@ -9,10 +9,30 @@ const appConfig = {
     'wss://purplerelay.com/',
     'wss://relay.devs.tools/',
   ],
-  authorPubkeys: [
-    'f33c8a9617cb15f705fc70cd461cfd6eaf22f9e24c33eabad981648e5ec6f741',
-    'c67cd3e1a83daa56cff16f635db2fdb9ed9619300298d4701a58e68e84098345'
-  ],
+  // NIP-28 Public Chat Channel Configuration
+  nip28: {
+    channelMetadata: {
+      name: 'DIRKTEST',
+      about: 'DIRKTEST',
+      picture: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLUv_PyVbALqgHomnxSbLzfjM50mV_q6ZHKQ&s',
+      relays: [
+        'wss://nos.lol/',
+        'wss://relay.damus.io/',
+        'wss://relay.snort.social/',
+        'wss://relay.primal.net/'
+      ]
+    },
+    requireChannel: true,
+    adminPubkeys: [
+      'f33c8a9617cb15f705fc70cd461cfd6eaf22f9e24c33eabad981648e5ec6f741',
+      'c67cd3e1a83daa56cff16f635db2fdb9ed9619300298d4701a58e68e84098345',
+      '6260f29fa75c91aaa292f082e5e87b438d2ab4fdf96af398567b01802ee2fcd4'
+    ]
+  },
+  // Legacy compatibility - same as admin pubkeys
+  get authorPubkeys() {
+    return this.nip28.adminPubkeys;
+  },
   customLightningAddresses: [
     {
       // todo remove need for lowercase

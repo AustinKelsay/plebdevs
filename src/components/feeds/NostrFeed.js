@@ -8,15 +8,36 @@ import Image from 'next/image';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import { nip19 } from 'nostr-tools';
 import { useCommunityNotes } from '@/hooks/nostr/useCommunityNotes';
+import { useNip28Channel } from '@/hooks/nostr/useNip28Channel';
 import CommunityMessage from '@/components/feeds/messages/CommunityMessage';
+import ChannelEmptyState from './ChannelEmptyState';
 
 const NostrFeed = ({ searchQuery }) => {
-  const { communityNotes, isLoading, error } = useCommunityNotes();
+  const { communityNotes, isLoading, error, hasChannel } = useCommunityNotes();
+  const { 
+    canCreateChannel, 
+    createChannel, 
+    refreshChannel, 
+    isLoading: channelLoading,
+    error: channelError 
+  } = useNip28Channel();
   const { ndk } = useNDKContext();
   const { data: session } = useSession();
   const [authorData, setAuthorData] = useState({});
 
   const windowWidth = useWindowWidth();
+
+  /**
+   * Handle admin channel creation
+   */
+  const handleCreateChannel = async () => {
+    try {
+      await createChannel();
+      // Channel creation will trigger a refresh automatically
+    } catch (error) {
+      console.error('Failed to create channel:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchAuthors = async () => {
@@ -58,7 +79,8 @@ const NostrFeed = ({ searchQuery }) => {
     }
   };
 
-  if (isLoading) {
+  // Show loading while channel is initializing
+  if (isLoading || channelLoading) {
     return (
       <div className="h-[100vh] min-bottom-bar:w-[86vw] max-sidebar:w-[100vw]">
         <ProgressSpinner className="w-full mt-24 mx-auto" />
@@ -66,10 +88,35 @@ const NostrFeed = ({ searchQuery }) => {
     );
   }
 
-  if (error) {
+  // Show channel empty state if no channel is available
+  if (!hasChannel) {
+    const mode = channelError ? 'error' : 'no-channel';
+    return (
+      <div className="h-full w-full p-4">
+        <ChannelEmptyState
+          mode={mode}
+          error={channelError}
+          onRetry={refreshChannel}
+          canCreateChannel={canCreateChannel}
+          onCreateChannel={handleCreateChannel}
+        />
+      </div>
+    );
+  }
+
+  // Show error for message loading issues (not channel issues)
+  if (error && hasChannel) {
     return (
       <div className="text-red-500 text-center p-4">
-        Failed to load messages. Please try again later.
+        Failed to load messages. Channel is available but message loading failed.
+        <div className="mt-2">
+          <button 
+            onClick={refreshChannel}
+            className="text-blue-400 hover:text-blue-300 underline"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }

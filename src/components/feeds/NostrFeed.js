@@ -11,6 +11,7 @@ import { useCommunityNotes } from '@/hooks/nostr/useCommunityNotes';
 import { useNip28Channel } from '@/hooks/nostr/useNip28Channel';
 import CommunityMessage from '@/components/feeds/messages/CommunityMessage';
 import ChannelEmptyState from './ChannelEmptyState';
+import { useToast } from '@/hooks/useToast';
 
 const NostrFeed = ({ searchQuery }) => {
   const { communityNotes, isLoading, error, hasChannel } = useCommunityNotes();
@@ -26,6 +27,7 @@ const NostrFeed = ({ searchQuery }) => {
   const [authorData, setAuthorData] = useState({});
 
   const windowWidth = useWindowWidth();
+  const { showToast } = useToast();
 
   /**
    * Handle admin channel creation
@@ -36,6 +38,11 @@ const NostrFeed = ({ searchQuery }) => {
       // Channel creation will trigger a refresh automatically
     } catch (error) {
       console.error('Failed to create channel:', error);
+      showToast(
+        'error',
+        'Channel Creation Failed',
+        error?.message || 'An unexpected error occurred while creating the channel.'
+      );
     }
   };
 

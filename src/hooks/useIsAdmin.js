@@ -29,7 +29,9 @@ export function useIsAdmin() {
         try {
           const user = await ndk.signer.user();
           if (user?.pubkey) {
-            isNostrAdmin = appConfig.nip28.adminPubkeys.includes(user.pubkey);
+            const adminPubkeys = appConfig.nip28?.adminPubkeys;
+            if (Array.isArray(adminPubkeys))
+              isNostrAdmin = adminPubkeys.includes(user.pubkey);
           }
         } catch (err) {
           console.warn('Could not get Nostr user for admin check:', err);

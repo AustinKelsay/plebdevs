@@ -289,7 +289,136 @@ export const parseChannelEvent = event => {
 
   console.log('Parsing channel event:', event);
 
-  // Try to get ID from the actual event data
+  // Use centralized event ID extraction logic
+  const eventId = getEventId(event);
+
+  const eventData = {
+    id: eventId,
+    pubkey: event.pubkey || '',
+    content: event.content || '',
+    kind: event.kind || 40,
+    created_at: event.created_at || 0,
+    type: 'channel',
+    metadata: null,
+    tags: event.tags || []
+  };
+
+  // Parse channel metadata from content
+  try {
+    if (eventData.content) {
+      eventData.metadata = JSON.parse(eventData.content);
+    }
+  } catch (err) {
+    console.warn('Error parsing channel metadata:', err);
+    eventData.metadata = {};
+  }
+
+  // Extract additional data from tags
+  event.tags.forEach(tag => {
+    switch (tag[0]) {
+      case 't':
+        if (!eventData.topics) eventData.topics = [];
+        eventData.topics.push(tag[1]);
+        break;
+      case 'r':
+        if (!eventData.relays) eventData.relays = [];
+        eventData.relays.push(tag[1]);
+        break;
+      default:
+        break;
+    }
+  });
+
+  return eventData;
+};
+
+/**
+ * Parse NIP-28 Channel Metadata Event (kind 41)
+ * 
+ * @param {Object} event - The NDK event object
+ * @returns {Object} - Parsed channel metadata
+ */
+export const parseChannelMetadataEvent = event => {
+  const eventData = {
+    id: getEventId(event),
+    pubkey: event.pubkey || '',
+    content: event.content || '',
+    kind: event.kind || 41,
+    created_at: event.created_at || 0,
+    type: 'channel-metadata',
+    channelId: null,
+    metadata: null,
+    tags: event.tags || []
+  };
+
+  // Find channel reference
+  event.tags.forEach(tag => {
+    if (tag[0] === 'e' && tag[3] === 'root') {
+      eventData.channelId = tag[1];
+    }
+  });
+
+  // Parse metadata from content
+  try {
+    if (eventData.content) {
+      eventData.metadata = JSON.parse(eventData.content);
+    }
+  } catch (err) {
+    console.warn('Error parsing channel metadata:', err);
+    eventData.metadata = {};
+  }
+
+  return eventData;
+};
+
+/**
+ * Parse NIP-28 Channel Message Event (kind 42)
+ * 
+ * @param {Object} event - The NDK event object
+ * @returns {Object} - Parsed channel message
+ */
+export const parseChannelMessageEvent = event => {
+  const eventData = {
+    id: getEventId(event),
+    pubkey: event.pubkey || '',
+    content: event.content || '',
+    kind: event.kind || 42,
+    created_at: event.created_at || 0,
+    type: 'channel-message',
+    channelId: null,
+    replyTo: null,
+    mentions: [],
+    tags: event.tags || []
+  };
+
+  // Parse NIP-10 threading and channel references
+  event.tags.forEach(tag => {
+    switch (tag[0]) {
+      case 'e':
+        if (tag[3] === 'root') {
+          eventData.channelId = tag[1];
+        } else if (tag[3] === 'reply') {
+          eventData.replyTo = tag[1];
+        }
+        break;
+      case 'p':
+        eventData.mentions.push(tag[1]);
+        break;
+      default:
+        break;
+    }
+  });
+
+  return eventData;
+};
+
+/**
+ * Generate a proper event ID from NDK event with comprehensive fallback logic
+ * 
+ * @param {Object} event - The NDK event object
+ * @returns {string} - The event ID
+ */
+export const getEventId = event => {
   let eventId = '';
   
   // First try the direct properties
@@ -373,143 +502,6 @@ export const parseChannelEvent = event => {
       eventId = `temp_${event.pubkey.slice(0, 8)}_${event.created_at}`;
     }
   }
-
-  const eventData = {
-    id: eventId,
-    pubkey: event.pubkey || '',
-    content: event.content || '',
-    kind: event.kind || 40,
-    created_at: event.created_at || 0,
-    type: 'channel',
-    metadata: null,
-    tags: event.tags || []
-  };
-
-  // Parse channel metadata from content
-  try {
-    if (eventData.content) {
-      eventData.metadata = JSON.parse(eventData.content);
-    }
-  } catch (err) {
-    console.warn('Error parsing channel metadata:', err);
-    eventData.metadata = {};
-  }
-
-  // Extract additional data from tags
-  event.tags.forEach(tag => {
-    switch (tag[0]) {
-      case 't':
-        if (!eventData.topics) eventData.topics = [];
-        eventData.topics.push(tag[1]);
-        break;
-      case 'r':
-        if (!eventData.relays) eventData.relays = [];
-        eventData.relays.push(tag[1]);
-        break;
-      default:
-        break;
-    }
-  });
-
-  return eventData;
-};
-
-/**
- * Parse NIP-28 Channel Metadata Event (kind 41)
- * 
- * @param {Object} event - The NDK event object
- * @returns {Object} - Parsed channel metadata
- */
-export const parseChannelMetadataEvent = event => {
-  const eventData = {
-    id: event.id || event.eventId || event.tagId() || '',
-    pubkey: event.pubkey || '',
-    content: event.content || '',
-    kind: event.kind || 41,
-    created_at: event.created_at || 0,
-    type: 'channel-metadata',
-    channelId: null,
-    metadata: null,
-    tags: event.tags || []
-  };
-
-  // Find channel reference
-  event.tags.forEach(tag => {
-    if (tag[0] === 'e' && tag[3] === 'root') {
-      eventData.channelId = tag[1];
-    }
-  });
-
-  // Parse metadata from content
-  try {
-    if (eventData.content) {
-      eventData.metadata = JSON.parse(eventData.content);
-    }
-  } catch (err) {
-    console.warn('Error parsing channel metadata:', err);
-    eventData.metadata = {};
-  }
-
-  return eventData;
-};
-
-/**
- * Parse NIP-28 Channel Message Event (kind 42)
- * 
- * @param {Object} event - The NDK event object
- * @returns {Object} - Parsed channel message
- */
-export const parseChannelMessageEvent = event => {
-  const eventData = {
-    id: event.id || event.eventId || event.tagId() || '',
-    pubkey: event.pubkey || '',
-    content: event.content || '',
-    kind: event.kind || 42,
-    created_at: event.created_at || 0,
-    type: 'channel-message',
-    channelId: null,
-    replyTo: null,
-    mentions: [],
-    tags: event.tags || []
-  };
-
-  // Parse NIP-10 threading and channel references
-  event.tags.forEach(tag => {
-    switch (tag[0]) {
-      case 'e':
-        if (tag[3] === 'root') {
-          eventData.channelId = tag[1];
-        } else if (tag[3] === 'reply') {
-          eventData.replyTo = tag[1];
-        }
-        break;
-      case 'p':
-        eventData.mentions.push(tag[1]);
-        break;
-      default:
-        break;
-    }
-  });
-
-  return eventData;
-};
-
-/**
- * Generate a proper event ID from NDK event
- * 
- * @param {Object} event - The NDK event object
- * @returns {string} - The event ID
- */
-export const getEventId = event => {
-  // Try different methods to get the ID
-  if (event.id && event.id !== '') return event.id;
-  if (event.eventId && event.eventId !== '') return event.eventId;
-  if (typeof event.tagId === 'function') {
-    const tagId = event.tagId();
-    if (tagId && tagId !== '') return tagId;
-  }
   
-  // If no ID available, generate one or return null
-  console.warn('No event ID found for event:', event);
-  return null;
+  return eventId || null;
 };

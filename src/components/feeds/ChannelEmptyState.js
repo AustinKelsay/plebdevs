@@ -5,7 +5,7 @@
  * system is unavailable, helping users understand the current state.
  * 
  * @param {Object} props - Component props
- * @param {string} props.mode - Current mode ('loading', 'error', 'fallback', 'no-channel')
+ * @param {string} props.mode - Current mode ('loading', 'error', 'no-channel')
  * @param {string} props.error - Error message if applicable
  * @param {Function} props.onRetry - Optional retry function
  * @param {boolean} props.canCreateChannel - Whether user can create channels

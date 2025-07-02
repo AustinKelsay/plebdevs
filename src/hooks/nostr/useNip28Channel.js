@@ -1,10 +1,22 @@
 /**
- * useNip28Channel - Hook for managing NIP-28 public chat channels
+ * Hook for managing NIP-28 public chat channels
  * 
- * Handles channel discovery, creation, and metadata management according to NIP-28 spec.
- * Provides fallback mechanisms for graceful degradation when channels are unavailable.
+ * Automatically discovers existing channels by admin pubkeys and provides channel
+ * creation and metadata management functionality. Uses a state machine approach
+ * to prevent multiple concurrent initializations.
  * 
  * @returns {Object} Channel state and management functions
+ * @returns {NDKEvent|null} channel - The discovered channel event
+ * @returns {Object|null} channelMetadata - Parsed channel metadata (name, about, picture, etc.)
+ * @returns {string|null} channelId - Channel ID for message posting
+ * @returns {boolean} isLoading - Loading state during channel discovery
+ * @returns {string|null} error - Error message if initialization failed  
+ * @returns {string} initStatus - Initialization status ('idle'|'initializing'|'completed'|'error')
+ * @returns {boolean} canCreateChannel - Whether current user can create channels
+ * @returns {boolean} hasChannel - Whether a channel is available
+ * @returns {Function} createChannel - Create a new channel (admin only)
+ * @returns {Function} updateChannelMetadata - Update channel metadata (admin only)
+ * @returns {Function} refreshChannel - Force re-initialization of channel discovery
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNDKContext } from '@/context/NDKContext';
@@ -18,110 +30,19 @@ export function useNip28Channel() {
   const [channelMetadata, setChannelMetadata] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [initStatus, setInitStatus] = useState('idle'); // idle, initializing, completed, error
   const { ndk, addSigner } = useNDKContext();
   const { isAdmin: canCreateChannel } = useIsAdmin();
-  const initializationRef = useRef(false);
-  const mountedRef = useRef(true);
 
 
 
-  /**
-   * Search for existing PlebDevs channel (kind 40)
-   */
-  const discoverChannel = useCallback(async () => {
-    if (!ndk) return null;
 
-    try {
-      await ndk.connect();
-
-      // Search for existing channels with our metadata
-      const filter = {
-        kinds: [40],
-        authors: appConfig.nip28.adminPubkeys,
-        limit: 10
-      };
-
-      console.log('Searching for channels with filter:', filter);
-      const events = await ndk.fetchEvents(filter);
-      console.log('Found channel events:', events.size);
-      
-      // Find channel that matches our community
-      for (const event of events) {
-        try {
-          // Use the parsing function to get proper event data
-          console.log('yayaya', event);
-          const parsedChannel = parseChannelEvent(event);
-          console.log('Parsed channel:', parsedChannel);
-          
-          if (parsedChannel.metadata?.name === appConfig.nip28.channelMetadata.name) {
-            console.log('Found matching PlebDevs channel:', parsedChannel.id);
-            
-            // Return the original event but with proper ID handling
-            const channelEvent = {
-              ...event,
-              id: parsedChannel.id
-            };
-            
-            return channelEvent;
-          }
-        } catch (err) {
-          console.warn('Error parsing channel event:', err);
-        }
-      }
-
-      console.log('No matching channel found');
-      return null;
-    } catch (err) {
-      console.error('Error discovering channel:', err);
-      throw err;
-    }
-  }, [ndk]);
-
-  /**
-   * Fetch the latest channel metadata (kind 41)
-   */
-  const fetchChannelMetadata = useCallback(async (channelId) => {
-    if (!ndk || !channelId) return null;
-
-    try {
-      const filter = {
-        kinds: [41],
-        '#e': [channelId],
-        authors: appConfig.nip28.adminPubkeys,
-        limit: 1
-      };
-
-      const events = await ndk.fetchEvents(filter);
-      const latestMetadata = Array.from(events).sort((a, b) => b.created_at - a.created_at)[0];
-
-      if (latestMetadata) {
-        try {
-          const parsedMetadata = parseChannelMetadataEvent(latestMetadata);
-          console.log('Found channel metadata:', parsedMetadata.metadata);
-          return parsedMetadata.metadata;
-        } catch (err) {
-          console.warn('Error parsing channel metadata:', err);
-        }
-      }
-
-      return null;
-    } catch (err) {
-      console.error('Error fetching channel metadata:', err);
-      return null;
-    }
-  }, [ndk]);
 
   /**
    * Create a new PlebDevs channel (kind 40)
+   * Only available to admin users with connected Nostr extension
    */
   const createChannel = useCallback(async () => {
-    console.log('createChannel called - Debug info:', {
-      hasNdk: !!ndk,
-      hasSigner: !!ndk?.signer,
-      canCreateChannel,
-      ndkStatus: ndk ? 'available' : 'missing'
-    });
-
     if (!canCreateChannel) {
       throw new Error('Not authorized to create channels - admin permissions required');
     }
@@ -162,13 +83,8 @@ export function useNip28Channel() {
       ];
 
       await event.sign();
-      
-      // The ID should be available after signing
-      console.log('Signed channel event - ID:', event.id);
-      
       await event.publish();
 
-      console.log('Created new PlebDevs channel:', event.id);
       return event;
     } catch (err) {
       console.error('Error creating channel:', err);
@@ -213,7 +129,6 @@ export function useNip28Channel() {
       await event.sign();
       await event.publish();
 
-      console.log('Updated channel metadata for:', channelId);
       setChannelMetadata(newMetadata);
       return event;
     } catch (err) {
@@ -222,64 +137,7 @@ export function useNip28Channel() {
     }
   }, [ndk, canCreateChannel, addSigner]);
 
-  /**
-   * Initialize channel - discover existing or create new
-   */
-  const initializeChannel = useCallback(async () => {
-    if (!ndk) return;
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Try to discover existing channel
-      let channelEvent = await discoverChannel();
-
-      // If no channel exists and user can create, create one
-      if (!channelEvent && canCreateChannel && appConfig.nip28.requireChannel) {
-        console.log('No channel found, creating new one...');
-        try {
-          channelEvent = await createChannel();
-        } catch (createError) {
-          console.warn('Failed to create channel:', createError);
-          // Continue with fallback logic
-        }
-      }
-
-      if (channelEvent) {
-        setChannel(channelEvent);
-        
-        // Fetch latest metadata
-        const metadata = await fetchChannelMetadata(channelEvent.id);
-        if (metadata) {
-          setChannelMetadata(metadata);
-        } else {
-          // Use channel creation content as fallback
-          try {
-            const content = JSON.parse(channelEvent.content);
-            setChannelMetadata(content);
-          } catch (err) {
-            setChannelMetadata(appConfig.nip28.channelMetadata);
-          }
-        }
-        
-        console.log('Channel initialized successfully:', channelEvent.id);
-      } else {
-        // No channel available - this is expected for new communities
-        console.log('No channel found - awaiting admin creation');
-        // Don't set error - this is a normal state, not an error
-        setChannelMetadata(appConfig.nip28.channelMetadata); // For display purposes
-      }
-
-    } catch (err) {
-      console.error('Error initializing channel:', err);
-      setError(err.message);
-      initializationRef.current = false; // Allow retry on error
-      setChannelMetadata(appConfig.nip28.channelMetadata); // For display purposes
-    } finally {
-      setIsLoading(false);
-    }
-  }, [ndk, canCreateChannel, discoverChannel, createChannel, fetchChannelMetadata]);
 
   /**
    * Get channel ID for message posting
@@ -295,85 +153,83 @@ export function useNip28Channel() {
     return !!channel;
   }, [channel]);
 
-  // Initialize channel on mount and NDK changes only
+    /**
+   * Initialize channel discovery when NDK becomes available
+   */
   useEffect(() => {
-    if (ndk && !initializationRef.current && mountedRef.current) {
-      console.log('Initializing channel for the first time...');
-      initializationRef.current = true;
-      // Call initializeChannel directly without dependency on the callback
-      (async () => {
-        if (!ndk) return;
+    if (!ndk || initStatus !== 'idle') {
+      return;
+    }
 
-        setIsLoading(true);
-        setError(null);
+    setInitStatus('initializing');
+    setIsLoading(true);
+    setError(null);
 
-        try {
-          // Try to discover existing channel
-          let channelEvent = await discoverChannel();
+    (async () => {
+      try {
+        await ndk.connect();
 
-          // If no channel exists and user can create, create one
-          if (!channelEvent && canCreateChannel && appConfig.nip28.requireChannel) {
-            console.log('No channel found, creating new one...');
-            try {
-              channelEvent = await createChannel();
-            } catch (createError) {
-              console.warn('Failed to create channel:', createError);
+        // Search for existing channels by admin pubkeys
+        const events = await ndk.fetchEvents({
+          kinds: [40],
+          authors: appConfig.nip28.adminPubkeys,
+          limit: 10
+        });
+        
+        // Find channel matching our community metadata
+        let foundChannel = null;
+        for (const event of events) {
+          try {
+            const parsed = parseChannelEvent(event);
+            if (parsed.metadata?.name === appConfig.nip28.channelMetadata.name) {
+              foundChannel = { ...event, id: parsed.id };
+              break;
             }
-          }
-
-          if (channelEvent) {
-            if (!mountedRef.current) return; // Component unmounted
-            setChannel(channelEvent);
-            
-            // Fetch latest metadata
-            const metadata = await fetchChannelMetadata(channelEvent.id);
-            if (!mountedRef.current) return; // Component unmounted
-            if (metadata) {
-              setChannelMetadata(metadata);
-            } else {
-              // Use channel creation content as fallback
-              try {
-                const content = JSON.parse(channelEvent.content);
-                setChannelMetadata(content);
-              } catch (err) {
-                setChannelMetadata(appConfig.nip28.channelMetadata);
-              }
-            }
-            
-            console.log('Channel initialized successfully:', channelEvent.id);
-          } else {
-            // No channel available - this is expected for new communities
-            console.log('No channel found - awaiting admin creation');
-            if (!mountedRef.current) return; // Component unmounted
-            setChannelMetadata(appConfig.nip28.channelMetadata);
-          }
-
-                } catch (err) {
-          console.error('Error initializing channel:', err);
-          if (!mountedRef.current) return; // Component unmounted
-          setError(err.message);
-          initializationRef.current = false; // Allow retry on error
-          setChannelMetadata(appConfig.nip28.channelMetadata);
-        } finally {
-          if (mountedRef.current) {
-            setIsLoading(false);
+          } catch (err) {
+            console.warn('Error parsing channel event:', err);
           }
         }
-       })();
-     }
 
-     return () => {
-       mountedRef.current = false;
-     };
-   }, [ndk]); // Only depend on ndk to prevent multiple initializations
+        // Set channel state and metadata
+        if (foundChannel) {
+          setChannel(foundChannel);
+          
+          try {
+            const metadata = JSON.parse(foundChannel.content);
+            setChannelMetadata(metadata);
+          } catch (err) {
+            console.warn('Error parsing channel metadata, using default:', err);
+            setChannelMetadata(appConfig.nip28.channelMetadata);
+          }
+          
+          setInitStatus('completed');
+        } else {
+          // No channel found - normal state for new communities
+          setChannelMetadata(appConfig.nip28.channelMetadata);
+          setInitStatus('completed');
+        }
+        
+      } catch (err) {
+        console.error('Channel initialization failed:', err);
+        setError(err.message);
+        setInitStatus('error');
+        setChannelMetadata(appConfig.nip28.channelMetadata);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [ndk, initStatus]);
 
   /**
-   * Refresh channel (force re-initialization)
+   * Force re-initialization of channel discovery
+   * Useful for retrying after errors or when channels are updated
    */
   const refreshChannel = useCallback(() => {
-    initializationRef.current = false;
-    return initializeChannel();
-  }, [initializeChannel]);
+    setInitStatus('idle');
+    setChannel(null);
+    setChannelMetadata(null);
+    setError(null);
+  }, []);
 
   return {
     channel,
@@ -381,6 +237,7 @@ export function useNip28Channel() {
     channelId: getChannelId(),
     isLoading,
     error,
+    initStatus,
     canCreateChannel,
     hasChannel: hasChannel(),
     // Actions

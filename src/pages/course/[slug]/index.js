@@ -314,7 +314,7 @@ const Course = () => {
             >
               {sidebarVisible && (
                 <CourseSidebar
-                  lessons={uniqueLessons}
+                  lessons={[...uniqueLessons].sort((a, b) => a.index - b.index)}
                   activeIndex={activeIndex}
                   onLessonSelect={handleLessonSelect}
                   completedLessons={completedLessons}

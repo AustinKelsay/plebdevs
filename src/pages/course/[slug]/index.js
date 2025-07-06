@@ -226,14 +226,13 @@ const Course = () => {
           />
         </div>
 
-        {/* Main content area with fixed width */}
-        <div className="relative mt-4">
-          <div className={`transition-all duration-500 ease-in-out ${isMobileView ? 'w-full' : 'w-full'}`} 
-              style={!isMobileView && sidebarVisible ? {paddingRight: '320px'} : {}}>
-            
+        {/* Main content area with flex layout */}
+        <div className={`relative mt-4 ${!isMobileView ? 'flex items-start gap-x-8' : ''}`}>
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
             {/* Overview tab content */}
             <div className={`${activeTab === 'overview' ? 'block' : 'hidden'}`}>
-              <CourseOverview 
+              <CourseOverview
                 course={course}
                 paidCourse={paidCourse}
                 lessons={uniqueLessons}
@@ -246,7 +245,7 @@ const Course = () => {
                 toggleToContentTab={() => toggleTab(1)} // Assuming content tab is at index 1
               />
             </div>
-            
+
             {/* Content tab content */}
             <div className={`${activeTab === 'content' ? 'block' : 'hidden'}`}>
               {!isAuthorized ? (
@@ -266,11 +265,11 @@ const Course = () => {
                   </div>
                 </div>
               ) : (
-                <CourseContent 
+                <CourseContent
                   lessons={uniqueLessons}
                   activeIndex={activeIndex}
                   course={course}
-                  paidCourse={paidCourse} 
+                  paidCourse={paidCourse}
                   decryptedLessonIds={decryptedLessonIds || {}}
                   setCompleted={setCompleted}
                 />
@@ -279,68 +278,52 @@ const Course = () => {
 
             {/* QA tab content */}
             <div className={`${activeTab === 'qa' ? 'block' : 'hidden'}`}>
-              <CourseQA 
-                nAddress={nAddress}
-                isAuthorized={isAuthorized}
-                nsec={nsec}
-                npub={npub}
-              />
+              <CourseQA nAddress={nAddress} isAuthorized={isAuthorized} nsec={nsec} npub={npub} />
             </div>
+
+            {/* Mobile: Lessons are a tab */}
+            {isMobileView && (
+              <div className={`${activeTab === 'lessons' ? 'block' : 'hidden'}`}>
+                <CourseSidebar
+                  lessons={[...uniqueLessons].sort((a, b) => a.index - b.index)}
+                  activeIndex={activeIndex}
+                  onLessonSelect={handleLessonSelect}
+                  completedLessons={completedLessons}
+                  isMobileView={isMobileView}
+                  onClose={() => {
+                    setSidebarVisible(false);
+                    toggleTab(getActiveTabIndex());
+                  }}
+                  sidebarVisible={sidebarVisible}
+                  setSidebarVisible={setSidebarVisible}
+                  hideToggleButton={true}
+                />
+              </div>
+            )}
           </div>
 
-          {/* Course Sidebar - positioned absolutely on desktop when visible */}
-          {!isMobileView ? (
-            <div 
-              className={`transition-all duration-500 ease-in-out ${
-                sidebarVisible ? 'opacity-100 translate-x-0 shadow-2xl' : 'opacity-0 translate-x-full pointer-events-none'
+          {/* Desktop: Sidebar */}
+          {!isMobileView && (
+            <div
+              className={`flex-shrink-0 transition-all duration-300 ease-in-out ${
+                sidebarVisible ? 'w-80 opacity-100' : 'w-0 opacity-0'
               }`}
               style={{
-                position: 'absolute',
-                top: '0',
-                right: '0',
-                width: '320px',
-                height: '100%',
-                zIndex: 999,
-                overflow: 'visible',
-                transformOrigin: 'right center',
-                transform: `translateX(${sidebarVisible ? '0' : '10px'}) scale(${sidebarVisible ? '1' : '0.97'})`,
-                transition: 'transform 1000ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 300ms ease-in-out, box-shadow 1200ms ease'
+                pointerEvents: sidebarVisible ? 'auto' : 'none',
               }}
             >
-              <CourseSidebar
-                lessons={uniqueLessons}
-                activeIndex={activeIndex}
-                onLessonSelect={handleLessonSelect}
-                completedLessons={completedLessons}
-                isMobileView={isMobileView}
-                sidebarVisible={sidebarVisible}
-                setSidebarVisible={setSidebarVisible}
-                hideToggleButton={true}
-              />
-            </div>
-          ) : (
-            <div className={`flex-shrink-0 transition-all duration-300 z-[999] ${
-              (isMobileView && activeTab === 'lessons') ? 'ml-0 w-auto opacity-100 scale-100' : 
-              'w-0 ml-0 opacity-0 scale-95 overflow-hidden'
-            }`}
-            style={{
-              transformOrigin: 'top center',
-              transition: 'opacity 300ms ease, transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1), width 300ms ease-in-out'
-            }}>
-              <CourseSidebar
-                lessons={uniqueLessons}
-                activeIndex={activeIndex}
-                onLessonSelect={handleLessonSelect}
-                completedLessons={completedLessons}
-                isMobileView={isMobileView}
-                onClose={() => {
-                  setSidebarVisible(false);
-                  toggleTab(getActiveTabIndex());
-                }}
-                sidebarVisible={sidebarVisible}
-                setSidebarVisible={setSidebarVisible}
-                hideToggleButton={true}
-              />
+              {sidebarVisible && (
+                <CourseSidebar
+                  lessons={[...uniqueLessons].sort((a, b) => a.index - b.index)}
+                  activeIndex={activeIndex}
+                  onLessonSelect={handleLessonSelect}
+                  completedLessons={completedLessons}
+                  isMobileView={isMobileView}
+                  sidebarVisible={sidebarVisible}
+                  setSidebarVisible={setSidebarVisible}
+                  hideToggleButton={true}
+                />
+              )}
             </div>
           )}
         </div>

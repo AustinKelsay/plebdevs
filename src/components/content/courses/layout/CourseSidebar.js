@@ -91,7 +91,7 @@ const CourseSidebar = ({
           />
         )}
       </div>
-      <div className="overflow-y-auto flex-1 pr-2">
+      <div className="flex-1 pr-2">
         <ul className="space-y-2">
           {lessons.map((lesson, index) => (
             <LessonItem key={index} lesson={lesson} index={index} />
@@ -128,13 +128,11 @@ const CourseSidebar = ({
       {!isMobileView && sidebarVisible && (
         <div className="relative flex flex-row-reverse z-[999]">
           <div 
-            className={`transition-all duration-500 ease-in-out flex w-80 opacity-100`}
+            className={`transition-all duration-500 ease-in-out opacity-100`}
           >
-            <div className="ml-2 w-80 h-[calc(100vh-400px)] sticky overflow-hidden rounded-lg border border-gray-800 shadow-md bg-gray-800"
+            <div className="ml-2 w-80 sticky rounded-lg border border-gray-800 shadow-md bg-gray-800"
                  style={{ top: `${navbarHeight + 70}px` }}> {/* Adjusted to match new header spacing */}
-              <div className="h-full overflow-y-auto">
-                <SidebarContent />
-              </div>
+              <SidebarContent />
             </div>
           </div>
         </div>

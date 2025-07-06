@@ -285,7 +285,7 @@ const Course = () => {
             {isMobileView && (
               <div className={`${activeTab === 'lessons' ? 'block' : 'hidden'}`}>
                 <CourseSidebar
-                  lessons={uniqueLessons}
+                  lessons={[...uniqueLessons].sort((a, b) => a.index - b.index)}
                   activeIndex={activeIndex}
                   onLessonSelect={handleLessonSelect}
                   completedLessons={completedLessons}

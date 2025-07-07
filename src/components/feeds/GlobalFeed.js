@@ -57,6 +57,8 @@ const GlobalFeed = ({ searchQuery }) => {
     communityNotes: nostrData,
     error: nostrError,
     isLoading: nostrLoading,
+    channelMode,
+    hasChannel,
   } = useCommunityNotes();
   const { ndk } = useNDKContext();
   const { returnImageProxy } = useImageProxy();
@@ -66,12 +68,21 @@ const GlobalFeed = ({ searchQuery }) => {
 
   useEffect(() => {
     const fetchAuthors = async () => {
-      const authorDataMap = {};
-      for (const message of nostrData) {
-        const author = await fetchAuthor(message.pubkey);
-        authorDataMap[message.pubkey] = author;
+      try {
+        const authorDataMap = {};
+        for (const message of nostrData) {
+          try {
+            const author = await fetchAuthor(message.pubkey);
+            authorDataMap[message.pubkey] = author;
+          } catch (err) {
+            console.warn('Failed to fetch author for pubkey:', message.pubkey, err);
+            // Continue with other authors
+          }
+        }
+        setAuthorData(authorDataMap);
+      } catch (error) {
+        console.error('Error fetching authors in GlobalFeed:', error);
       }
-      setAuthorData(authorDataMap);
     };
 
     if (nostrData && nostrData.length > 0) {
@@ -81,6 +92,11 @@ const GlobalFeed = ({ searchQuery }) => {
 
   const fetchAuthor = async pubkey => {
     try {
+      if (!ndk) {
+        console.warn('NDK not available for author fetch');
+        return null;
+      }
+
       await ndk.connect();
 
       const filter = {
@@ -93,18 +109,22 @@ const GlobalFeed = ({ searchQuery }) => {
         try {
           const fields = await findKind0Fields(JSON.parse(author.content));
           return fields;
-        } catch (error) {
-          console.error('Error fetching author:', error);
+        } catch (parseError) {
+          console.warn('Error parsing author content for', pubkey.slice(0, 8), parseError);
+          return null;
         }
       } else {
+        // No author profile found - this is normal
         return null;
       }
     } catch (error) {
-      console.error('Error fetching author:', error);
+      console.warn('Error fetching author profile for', pubkey.slice(0, 8), error);
+      return null; // Return null instead of throwing
     }
   };
 
-  if (discordLoading || stackerNewsLoading || nostrLoading) {
+  // Show loading while core feeds are loading
+  if (discordLoading || stackerNewsLoading) {
     return (
       <div className="h-[100vh] min-bottom-bar:w-[86vw] max-sidebar:w-[100vw]">
         <ProgressSpinner className="w-full mt-24 mx-auto" />
@@ -112,18 +132,40 @@ const GlobalFeed = ({ searchQuery }) => {
     );
   }
 
-  if (discordError || stackerNewsError || nostrError) {
+  // Only show error if all feeds fail - allow partial failures
+  if (discordError && stackerNewsError && nostrError) {
     return (
       <div className="text-red-500 text-center p-4">
-        Failed to load feed. Please try again later.
+        Failed to load all feeds. Please try again later.
+        <div className="text-sm text-gray-400 mt-2">
+          Discord: {discordError ? 'Failed' : 'OK'} | 
+          StackerNews: {stackerNewsError ? 'Failed' : 'OK'} | 
+          Nostr: {nostrError ? `Failed (${hasChannel ? 'channel available' : 'no channel'})` : 'OK'}
+        </div>
       </div>
     );
   }
 
+  // Show warnings for individual feed failures
+  const warnings = [];
+  if (discordError) warnings.push('Discord feed unavailable');
+  if (stackerNewsError) warnings.push('StackerNews feed unavailable');
+  if (nostrError) warnings.push(`Nostr feed unavailable (${hasChannel ? 'channel exists but failed' : 'no channel available'})`);
+
+  console.log('GlobalFeed status:', {
+    discord: discordError ? 'error' : 'ok',
+    stackerNews: stackerNewsError ? 'error' : 'ok',
+    nostr: nostrError ? 'error' : 'ok',
+    nostrMode: channelMode,
+    hasChannel,
+    warnings
+  });
+
   const combinedFeed = [
     ...(discordData || []).map(item => ({ ...item, type: 'discord' })),
     ...(stackerNewsData || []).map(item => ({ ...item, type: 'stackernews' })),
-    ...(nostrData || []).map(item => ({ ...item, type: 'nostr' })),
+    // Only include Nostr data if it's available and no error
+    ...(!nostrError && nostrData ? nostrData.map(item => ({ ...item, type: 'nostr' })) : []),
   ]
     .sort((a, b) => {
       const dateA = a.type === 'nostr' ? a.created_at * 1000 : new Date(a.timestamp || a.createdAt);
@@ -143,6 +185,23 @@ const GlobalFeed = ({ searchQuery }) => {
 
   return (
     <div className="h-full w-full">
+      {/* Show feed status warnings */}
+      {warnings.length > 0 && (
+        <div className="mx-0 mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+          <div className="flex items-center">
+            <i className="pi pi-exclamation-triangle text-yellow-400 mr-2" />
+            <span className="text-yellow-300 text-sm">
+              Some feeds are unavailable: {warnings.join(', ')}
+            </span>
+          </div>
+          {nostrError && !hasChannel && (
+            <div className="text-xs text-yellow-200 mt-1">
+              Nostr channel needs to be created by an admin
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mx-0 mt-4">
         {combinedFeed.length > 0 ? (
           combinedFeed.map(item => (
@@ -196,7 +255,18 @@ const GlobalFeed = ({ searchQuery }) => {
           ))
         ) : (
           <div className="text-gray-400 text-center p-4">
-            {searchQuery ? 'No matching items found.' : 'No items available.'}
+            {searchQuery ? (
+              'No matching items found.'
+            ) : warnings.length > 0 ? (
+              <div>
+                <div>No items available from working feeds.</div>
+                <div className="text-sm mt-2">
+                  {warnings.length} of 3 feeds are currently unavailable.
+                </div>
+              </div>
+            ) : (
+              'No items available.'
+            )}
           </div>
         )}
       </div>

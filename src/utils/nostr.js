@@ -1,4 +1,5 @@
 import { nip19 } from 'nostr-tools';
+import { getEventHash } from 'nostr-tools/pure';
 
 export const findKind0Fields = async kind0 => {
   let fields = {};
@@ -277,3 +278,230 @@ export function validateEvent(event) {
 
   return true;
 }
+
+/**
+ * Parse NIP-28 Channel Creation Event (kind 40)
+ * 
+ * @param {Object} event - The NDK event object
+ * @returns {Object} - Parsed channel data
+ */
+export const parseChannelEvent = event => {
+
+  console.log('Parsing channel event:', event);
+
+  // Use centralized event ID extraction logic
+  const eventId = getEventId(event);
+
+  const eventData = {
+    id: eventId,
+    pubkey: event.pubkey || '',
+    content: event.content || '',
+    kind: event.kind || 40,
+    created_at: event.created_at || 0,
+    type: 'channel',
+    metadata: null,
+    tags: event.tags || []
+  };
+
+  // Parse channel metadata from content
+  try {
+    if (eventData.content) {
+      eventData.metadata = JSON.parse(eventData.content);
+    }
+  } catch (err) {
+    console.warn('Error parsing channel metadata:', err);
+    eventData.metadata = {};
+  }
+
+  // Extract additional data from tags
+  event.tags.forEach(tag => {
+    switch (tag[0]) {
+      case 't':
+        if (!eventData.topics) eventData.topics = [];
+        eventData.topics.push(tag[1]);
+        break;
+      case 'r':
+        if (!eventData.relays) eventData.relays = [];
+        eventData.relays.push(tag[1]);
+        break;
+      default:
+        break;
+    }
+  });
+
+  return eventData;
+};
+
+/**
+ * Parse NIP-28 Channel Metadata Event (kind 41)
+ * 
+ * @param {Object} event - The NDK event object
+ * @returns {Object} - Parsed channel metadata
+ */
+export const parseChannelMetadataEvent = event => {
+  const eventData = {
+    id: getEventId(event),
+    pubkey: event.pubkey || '',
+    content: event.content || '',
+    kind: event.kind || 41,
+    created_at: event.created_at || 0,
+    type: 'channel-metadata',
+    channelId: null,
+    metadata: null,
+    tags: event.tags || []
+  };
+
+  // Find channel reference
+  event.tags.forEach(tag => {
+    if (tag[0] === 'e' && tag[3] === 'root') {
+      eventData.channelId = tag[1];
+    }
+  });
+
+  // Parse metadata from content
+  try {
+    if (eventData.content) {
+      eventData.metadata = JSON.parse(eventData.content);
+    }
+  } catch (err) {
+    console.warn('Error parsing channel metadata:', err);
+    eventData.metadata = {};
+  }
+
+  return eventData;
+};
+
+/**
+ * Parse NIP-28 Channel Message Event (kind 42)
+ * 
+ * @param {Object} event - The NDK event object
+ * @returns {Object} - Parsed channel message
+ */
+export const parseChannelMessageEvent = event => {
+  const eventData = {
+    id: getEventId(event),
+    pubkey: event.pubkey || '',
+    content: event.content || '',
+    kind: event.kind || 42,
+    created_at: event.created_at || 0,
+    type: 'channel-message',
+    channelId: null,
+    replyTo: null,
+    mentions: [],
+    tags: event.tags || []
+  };
+
+  // Parse NIP-10 threading and channel references
+  event.tags.forEach(tag => {
+    switch (tag[0]) {
+      case 'e':
+        if (tag[3] === 'root') {
+          eventData.channelId = tag[1];
+        } else if (tag[3] === 'reply') {
+          eventData.replyTo = tag[1];
+        }
+        break;
+      case 'p':
+        eventData.mentions.push(tag[1]);
+        break;
+      default:
+        break;
+    }
+  });
+
+  return eventData;
+};
+
+/**
+ * Generate a proper event ID from NDK event with comprehensive fallback logic
+ * 
+ * @param {Object} event - The NDK event object
+ * @returns {string} - The event ID
+ */
+export const getEventId = event => {
+  let eventId = '';
+  
+  // First try the direct properties
+  if (event.id && event.id !== '') {
+    eventId = event.id;
+  } else if (event.eventId && event.eventId !== '') {
+    eventId = event.eventId;
+  } else if (typeof event.tagId === 'function') {
+    const tagId = event.tagId();
+    if (tagId && tagId !== '') eventId = tagId;
+  }
+  
+  // Try to decode the nevent if available (skip if malformed)
+  if (!eventId && event.encode) {
+    try {
+      const neventString = typeof event.encode === 'function' ? event.encode() : event.encode;
+      if (neventString && typeof neventString === 'string') {
+        const decoded = nip19.decode(neventString);
+        if (decoded.type === 'nevent' && decoded.data?.id) {
+          eventId = decoded.data.id;
+          console.log('Decoded event ID from nevent:', eventId);
+        }
+      }
+    } catch (err) {
+      // Nevent is malformed, will fallback to generating ID from event data
+      console.log('Nevent malformed, will generate ID from event data');
+    }
+  }
+  
+  // Try the rawEvent - call it if it's a function
+  if (!eventId && event.rawEvent) {
+    try {
+      const rawEventData = typeof event.rawEvent === 'function' ? event.rawEvent() : event.rawEvent;
+      if (rawEventData?.id) {
+        eventId = rawEventData.id;
+        console.log('Found ID in raw event data:', eventId);
+      }
+    } catch (err) {
+      console.warn('Error accessing raw event:', err);
+    }
+  }
+
+  // Generate event ID from event data if we have all required fields
+  if (!eventId && event.pubkey && event.kind && event.created_at && event.content && event.tags) {
+    try {
+      console.log('Generating event ID from event data:', {
+        pubkey: event.pubkey?.slice(0, 8) + '...',
+        kind: event.kind,
+        created_at: event.created_at,
+        contentLength: event.content?.length,
+        tagsLength: event.tags?.length
+      });
+      
+      const eventForHashing = {
+        pubkey: event.pubkey,
+        kind: event.kind,
+        created_at: event.created_at,
+        tags: event.tags,
+        content: event.content
+      };
+      
+      eventId = getEventHash(eventForHashing);
+      console.log('✅ Generated event ID from data:', eventId);
+    } catch (err) {
+      console.error('❌ Error generating event ID:', err);
+    }
+  } else if (!eventId) {
+    console.log('Cannot generate event ID - missing required fields:', {
+      hasPubkey: !!event.pubkey,
+      hasKind: !!event.kind,
+      hasCreatedAt: !!event.created_at,
+      hasContent: !!event.content,
+      hasTags: !!event.tags
+    });
+  }
+
+  // Last resort - generate temporary ID
+  if (!eventId) {
+    console.warn('No event ID found - generating temporary ID');
+    if (event.pubkey && event.created_at) {
+      eventId = `temp_${event.pubkey.slice(0, 8)}_${event.created_at}`;
+    }
+  }
+  
+  return eventId || null;
+};

@@ -17,6 +17,7 @@ import { formatTimestampToHowLongAgo } from '@/utils/time';
 import { nip19 } from 'nostr-tools';
 import { Tag } from 'primereact/tag';
 import { Message } from 'primereact/message';
+import PromoFreeBadge from '@/components/pricing/PromoFreeBadge';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import GenericButton from '@/components/buttons/GenericButton';
 import { PlayCircle, FileText } from 'lucide-react';
@@ -106,21 +107,12 @@ export function CombinedTemplate({ resource, isLesson, showMetaTags }) {
             <Tag size="small" className="px-2 py-1 text-sm text-[#f8f8ff]" value="lesson" />
           )}
         </div>
-        {resource?.price && resource?.price > 0 ? (
-          <Message
-            className={`${isMobile ? 'py-1 text-xs' : 'py-2'} whitespace-nowrap`}
-            icon="pi pi-lock"
-            severity="info"
-            text={`${resource.price} sats`}
-          />
-        ) : (
-          <Message
-            className={`${isMobile ? 'py-1 text-xs' : 'py-2'} whitespace-nowrap`}
-            icon="pi pi-lock-open"
-            severity="success"
-            text="Free"
-          />
-        )}
+        <Message
+          className={`${isMobile ? 'py-1 text-xs' : 'py-2'} whitespace-nowrap flex items-center gap-2`}
+          severity="success"
+          icon="pi pi-lock-open"
+          content={<PromoFreeBadge />}
+        />
       </CardContent>
       <CardDescription
         className={`${isMobile ? 'w-full p-3' : 'p-6'} py-2 pt-0 text-base text-neutral-50/90 dark:text-neutral-900/90 overflow-hidden min-h-[4em] flex items-center max-w-[100%]`}

@@ -13,13 +13,19 @@ export default async function handler(req, res) {
     try {
       const { userId, resourceId, amountPaid } = req.body;
 
-      if (!userId || !resourceId || !amountPaid) {
+      if (!userId || !resourceId || amountPaid === undefined || amountPaid === null) {
         return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      const parsedAmount = parseInt(amountPaid, 10);
+
+      if (Number.isNaN(parsedAmount)) {
+        return res.status(400).json({ error: 'Invalid amount' });
       }
 
       const updatedUser = await addResourcePurchaseToUser(userId, {
         resourceId,
-        amountPaid: parseInt(amountPaid, 10),
+        amountPaid: parsedAmount,
       });
 
       res.status(200).json(updatedUser);

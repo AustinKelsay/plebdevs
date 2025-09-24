@@ -17,6 +17,8 @@ import useTrackCourse from '@/hooks/tracking/useTrackCourse';
 import WelcomeModal from '@/components/onboarding/WelcomeModal';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Toast } from 'primereact/toast';
+import PromoFreeBadge from '@/components/pricing/PromoFreeBadge';
+import { PROMO_PRICING_MESSAGE } from '@/constants/promoPricing';
 
 // Import the desktop and mobile components
 import DesktopCourseDetails from '@/components/content/courses/details/DesktopCourseDetails';
@@ -150,31 +152,27 @@ export default function CourseDetails({
       !session?.user?.role?.subscribed
     ) {
       return (
-        <GenericButton
-          icon="pi pi-check"
-          label={`Paid`}
-          severity="success"
-          outlined
-          size="small"
-          tooltip={`You paid ${processedEvent.price} sats to access this course (or potentially less if a discount was applied)`}
-          tooltipOptions={{ position: 'right' }}
-          className="cursor-default hover:opacity-100 hover:bg-transparent focus:ring-0"
-        />
+        <div className="flex items-center gap-2">
+          <i className="pi pi-check text-sm text-blue-300" />
+          <PromoFreeBadge
+            wrapperClassName="flex items-center gap-1 text-sm"
+            labelClassName="text-blue-300 font-semibold"
+            iconClassName="pi pi-question-circle text-xs text-blue-300"
+          />
+        </div>
       );
     }
 
     if (paidCourse && author && processedEvent?.pubkey === session?.user?.pubkey) {
       return (
-        <GenericButton
-          tooltipOptions={{ position: 'right' }}
-          tooltip={`You created this paid course, users must pay ${processedEvent.price} sats to access it`}
-          icon="pi pi-check"
-          label={`Price ${processedEvent.price} sats`}
-          severity="success"
-          outlined
-          size="small"
-          className="cursor-default hover:opacity-100 hover:bg-transparent focus:ring-0"
-        />
+        <div className="flex items-center gap-2">
+          <i className="pi pi-check text-sm text-blue-300" />
+          <PromoFreeBadge
+            wrapperClassName="flex items-center gap-1 text-sm"
+            labelClassName="text-blue-300 font-semibold"
+            iconClassName="pi pi-question-circle text-xs text-blue-300"
+          />
+        </div>
       );
     }
 

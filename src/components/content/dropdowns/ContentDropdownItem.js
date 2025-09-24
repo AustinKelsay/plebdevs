@@ -4,6 +4,7 @@ import { useImageProxy } from '@/hooks/useImageProxy';
 import { formatUnixTimestamp } from '@/utils/time';
 import { Tag } from 'primereact/tag';
 import { Message } from 'primereact/message';
+import PromoFreeBadge from '@/components/pricing/PromoFreeBadge';
 import GenericButton from '@/components/buttons/GenericButton';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import { BookOpen } from 'lucide-react';
@@ -81,19 +82,12 @@ const ContentDropdownItem = ({ content, onSelect }) => {
                   : (content?.title || content?.name)}
               </h3>
 
-              {content?.price > 0 ? (
-                <Message
-                  severity="info"
-                  text={`${content.price} sats`}
-                  className="py-1 text-xs whitespace-nowrap shadow-sm"
-                />
-              ) : (
-                <Message
-                  severity="success"
-                  text="Free"
-                  className="py-1 text-xs whitespace-nowrap shadow-sm"
-                />
-              )}
+              <Message
+                severity="success"
+                className="py-1 text-xs whitespace-nowrap shadow-sm flex items-center gap-2"
+                icon="pi pi-lock-open"
+                content={<PromoFreeBadge wrapperClassName="flex items-center gap-1" labelClassName="text-green-400 font-semibold" />}
+              />
             </div>
 
             {content?.summary && (

@@ -11,6 +11,8 @@ import GenericButton from '@/components/buttons/GenericButton';
 import { useRouter } from 'next/router';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import { InputText } from 'primereact/inputtext';
+import PromoFreeBadge from '@/components/pricing/PromoFreeBadge';
+import { PROMO_FREE_PRICE_SATS, PROMO_PRICING_MESSAGE } from '@/constants/promoPricing';
 
 const Payment = dynamic(() => import('@getalby/bitcoin-connect-react').then(mod => mod.Payment), {
   ssr: false,
@@ -72,8 +74,15 @@ const CoursePaymentButton = ({ lnAddress, amount, onSuccess, onError, courseId }
   const fetchInvoice = async () => {
     setIsLoading(true);
     try {
-      if (discountApplied && calculateDiscount(amount).discountedAmount === 0) {
-        handlePaymentSuccess({ paid: true, preimage: 'course_pass' });
+      if (!session?.user?.id) {
+        showToast('warn', 'Sign In Required', 'Please sign in to unlock this course.');
+        router.push('/auth/signin');
+        return;
+      }
+
+      if (PROMO_FREE_PRICE_SATS === 0) {
+        await handlePaymentSuccess({ paid: true, preimage: 'promo-free-course' });
+        showToast('success', 'Free Course Access', PROMO_PRICING_MESSAGE);
         return;
       }
 
@@ -89,8 +98,9 @@ const CoursePaymentButton = ({ lnAddress, amount, onSuccess, onError, courseId }
       console.error('Error fetching invoice:', error);
       showToast('error', 'Invoice Error', 'Failed to fetch the invoice.');
       if (onError) onError(error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handlePaymentSuccess = async response => {
@@ -98,9 +108,7 @@ const CoursePaymentButton = ({ lnAddress, amount, onSuccess, onError, courseId }
       const purchaseData = {
         userId: session.user.id,
         courseId: courseId,
-        amountPaid: discountApplied
-          ? calculateDiscount(amount).discountedAmount
-          : parseInt(amount, 10),
+        amountPaid: PROMO_FREE_PRICE_SATS,
       };
 
       const result = await axios.post('/api/purchase/course', purchaseData);
@@ -121,6 +129,7 @@ const CoursePaymentButton = ({ lnAddress, amount, onSuccess, onError, courseId }
       if (onError) onError(error);
     }
     setDialogVisible(false);
+    setInvoice(null);
   };
 
   const handleDiscountCode = value => {
@@ -202,22 +211,27 @@ const CoursePaymentButton = ({ lnAddress, amount, onSuccess, onError, courseId }
           )}
         </div>
       )}
-      <GenericButton
-        label={`${discountApplied ? calculateDiscount(amount).discountedAmount : amount} sats`}
-        icon="pi pi-wallet"
-        onClick={() => {
-          if (status === 'unauthenticated') {
-            console.log('unauthenticated');
-            router.push('/auth/signin');
-          } else {
-            fetchInvoice();
-          }
-        }}
-        disabled={isLoading}
-        severity="primary"
-        rounded
-        className={`text-[#f8f8ff] text-sm ${isLoading ? 'hidden' : ''}`}
-      />
+      <div className="flex items-center gap-2">
+        <GenericButton
+          label="Free"
+          icon="pi pi-wallet"
+          onClick={() => {
+            if (status === 'unauthenticated') {
+              console.log('unauthenticated');
+              router.push('/auth/signin');
+            } else {
+              fetchInvoice();
+            }
+          }}
+          disabled={isLoading}
+          severity="primary"
+          rounded
+          className={`text-[#f8f8ff] text-sm ${isLoading ? 'hidden' : ''}`}
+        />
+        {!isLoading && (
+          <PromoFreeBadge showLabel={false} wrapperClassName="flex items-center" />
+        )}
+      </div>
       {isLoading && (
         <div className="w-full h-full flex items-center justify-center">
           <ProgressSpinner

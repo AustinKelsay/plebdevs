@@ -5,6 +5,7 @@ import ZapDisplay from '@/components/zaps/ZapDisplay';
 import MoreOptionsMenu from '@/components/ui/MoreOptionsMenu';
 import { Divider } from 'primereact/divider';
 import GenericButton from '@/components/buttons/GenericButton';
+import PromoFreeBadge from '@/components/pricing/PromoFreeBadge';
 
 export default function DesktopCourseDetails({
   processedEvent,
@@ -161,7 +162,11 @@ export default function DesktopCourseDetails({
                 {paidCourse && (
                   <div>
                     <p className="text-sm text-gray-400">Price</p>
-                    <p className="font-semibold text-white">{processedEvent.price} sats</p>
+                    <PromoFreeBadge
+                      wrapperClassName="flex items-center gap-2 text-white"
+                      labelClassName="font-semibold text-blue-300"
+                      iconClassName="pi pi-question-circle text-xs text-blue-300"
+                    />
                   </div>
                 )}
               </div>

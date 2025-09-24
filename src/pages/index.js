@@ -8,6 +8,8 @@ import { useDocuments } from '@/hooks/nostr/useDocuments';
 import { useVideos } from '@/hooks/nostr/useVideos';
 import { useCourses } from '@/hooks/nostr/useCourses';
 import { TabMenu } from 'primereact/tabmenu';
+import { Message } from 'primereact/message';
+import { Badge } from 'primereact/badge';
 import 'primeicons/primeicons.css';
 import GenericButton from '@/components/buttons/GenericButton';
 import { useRouter } from 'next/router';
@@ -104,6 +106,8 @@ export default function Home() {
   const [allContent, setAllContent] = useState([]);
   const [allTopics, setAllTopics] = useState([]);
   const [selectedTopic, setSelectedTopic] = useState('Top');
+  const bannerMessage =
+    'All content is free for a limited time while we finish building out PlebDevs Platform V2. Keep an eye out, coming soon (tm)!';
 
   useEffect(() => {
     if (documents && !documentsLoading) {
@@ -183,6 +187,23 @@ export default function Home() {
       </Head>
       <main>
         <HeroBanner />
+        <div className="w-full px-4 md:px-12 mt-6">
+            <Message
+              severity="info"
+              icon="pi pi-bolt"
+              className="announcement-message"
+              content={
+                <span className="announcement-content">
+                  <Badge 
+                    value="Limited" 
+                    className="announcement-badge" 
+                    style={{ color: '#f8f8ff' }}
+                  />
+                  <span className="announcement-text">{bannerMessage}</span>
+                </span>
+              }
+            />
+        </div>
         <div className="w-full px-4 md:px-12">
           <MenuTab
             selectedTopic={selectedTopic}
@@ -197,6 +218,88 @@ export default function Home() {
           <DocumentsCarousel />
         </div>
       </main>
+      <style jsx>{`
+        .announcement-message {
+          min-width: 320px;
+          border-radius: 9999px;
+          background: transparent;
+          border: 1px solid rgba(96, 165, 250, 0.35);
+          color: rgba(226, 232, 240, 0.95);
+          box-shadow: none;
+        }
+
+        .announcement-message :global(.p-message-wrapper) {
+          padding: 0.55rem 1.1rem;
+          background: transparent;
+        }
+
+        .announcement-message :global(.p-message-text) {
+          padding: 0;
+        }
+
+        .announcement-message :global(.p-message-icon) {
+          color: rgba(147, 197, 253, 0.95);
+          margin-right: 0.6rem;
+        }
+
+        .announcement-content {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-size: 0.95rem;
+        }
+
+        .announcement-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 2.75rem;
+          text-transform: uppercase;
+          font-size: 0.7rem;
+          letter-spacing: 0.08em;
+          border-radius: 9999px;
+          padding: 0.15rem 0.6rem;
+          background: transparent !important;
+          border: 1px solid rgba(96, 165, 250, 0.45) !important;
+          color: #f8f8ff !important;
+          font-weight: 600;
+        }
+
+        .announcement-badge :global(.p-badge) {
+          color: #f8f8ff !important;
+        }
+
+        .announcement-badge :global(.p-badge .p-badge-text) {
+          color: #f8f8ff !important;
+        }
+
+        .announcement-badge :global(.p-badge span) {
+          color: #f8f8ff !important;
+        }
+
+        .announcement-badge :global(*) {
+          color: #f8f8ff !important;
+        }
+
+        .announcement-text {
+          color: inherit;
+          font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+          .announcement-wrapper {
+            padding: 0.85rem 1.1rem;
+          }
+
+          .announcement-message {
+            min-width: 260px;
+          }
+
+          .announcement-content {
+            font-size: 0.85rem;
+          }
+        }
+      `}</style>
     </>
   );
 }

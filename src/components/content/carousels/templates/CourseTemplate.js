@@ -18,6 +18,7 @@ import { useRouter } from 'next/router';
 import { formatTimestampToHowLongAgo } from '@/utils/time';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
+import PromoFreeBadge from '@/components/pricing/PromoFreeBadge';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import GenericButton from '@/components/buttons/GenericButton';
 import appConfig from '@/config/appConfig';
@@ -126,21 +127,17 @@ export function CourseTemplate({ course, showMetaTags = true }) {
                 )
             )}
         </div>
-        {course?.price && course?.price > 0 ? (
-          <Message
-            className={`${isMobile ? 'py-1 text-xs' : 'py-2'} whitespace-nowrap`}
-            icon="pi pi-lock"
-            severity="info"
-            text={`${course.price} sats`}
-          />
-        ) : (
-          <Message
-            className={`${isMobile ? 'py-1 text-xs' : 'py-2'} whitespace-nowrap`}
-            icon="pi pi-lock-open"
-            severity="success"
-            text="Free"
-          />
-        )}
+        <Message
+          className={`${isMobile ? 'py-1 text-xs' : 'py-2'} whitespace-nowrap flex items-center gap-2`}
+          severity="success"
+          icon="pi pi-lock-open"
+          content={
+            <PromoFreeBadge
+              iconClassName="pi pi-question-circle text-xs text-green-300"
+              labelClassName="font-semibold text-green-400"
+            />
+          }
+        />
       </CardContent>
       <CardDescription
         className={`${

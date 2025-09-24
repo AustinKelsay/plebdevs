@@ -18,6 +18,8 @@ import ZapThreadsWrapper from '@/components/ZapThreadsWrapper';
 import appConfig from '@/config/appConfig';
 import { nip19 } from 'nostr-tools';
 import MarkdownDisplay from '@/components/markdown/MarkdownDisplay';
+import PromoFreeBadge from '@/components/pricing/PromoFreeBadge';
+import { PROMO_PRICING_MESSAGE } from '@/constants/promoPricing';
 
 const CombinedDetails = ({
   processedEvent,
@@ -168,20 +170,14 @@ const CombinedDetails = ({
       course &&
       session?.user?.purchased?.some(purchase => purchase.courseId === course)
     ) {
-      const coursePurchase = session?.user?.purchased?.find(
-        purchase => purchase.courseId === course
-      );
       return (
-        <GenericButton
-          tooltipOptions={{ position: 'top' }}
-          tooltip={`You have this lesson through purchasing the course it belongs to. You paid ${coursePurchase?.course?.price} sats for the course.`}
-          icon="pi pi-check"
-          label={`Paid ${coursePurchase?.course?.price} sats`}
-          severity="success"
-          outlined
-          size="small"
-          className="cursor-default hover:opacity-100 hover:bg-transparent focus:ring-0"
-        />
+        <div className="flex items-center gap-2 text-green-400">
+          <i className="pi pi-check text-sm" />
+          <PromoFreeBadge
+            wrapperClassName="flex items-center gap-1 text-sm"
+            labelClassName="text-green-400 font-semibold"
+          />
+        </div>
       );
     }
 
@@ -193,29 +189,25 @@ const CombinedDetails = ({
       !session?.user?.role?.subscribed
     ) {
       return (
-        <GenericButton
-          icon="pi pi-check"
-          label={`Paid ${processedEvent.price} sats`}
-          severity="success"
-          outlined
-          size="small"
-          className="cursor-default hover:opacity-100 hover:bg-transparent focus:ring-0"
-        />
+        <div className="flex items-center gap-2 text-green-400">
+          <i className="pi pi-check text-sm" />
+          <PromoFreeBadge
+            wrapperClassName="flex items-center gap-1 text-sm"
+            labelClassName="text-green-400 font-semibold"
+          />
+        </div>
       );
     }
 
     if (paidResource && author && processedEvent?.pubkey === session?.user?.pubkey) {
       return (
-        <GenericButton
-          tooltipOptions={{ position: 'top' }}
-          tooltip={`You created this paid content, users must pay ${processedEvent.price} sats to access it`}
-          icon="pi pi-check"
-          label={`Price ${processedEvent.price} sats`}
-          severity="success"
-          outlined
-          size="small"
-          className="cursor-default hover:opacity-100 hover:bg-transparent focus:ring-0"
-        />
+        <div className="flex items-center gap-2 text-green-400">
+          <i className="pi pi-check text-sm" />
+          <PromoFreeBadge
+            wrapperClassName="flex items-center gap-1 text-sm"
+            labelClassName="text-green-400 font-semibold"
+          />
+        </div>
       );
     }
 
@@ -232,15 +224,13 @@ const CombinedDetails = ({
         <div className="w-full px-4">
           <div className="w-full p-8 rounded-lg flex flex-col items-center justify-center bg-gray-800">
             <div className="mx-auto py-auto">
-              <i className="pi pi-lock text-[60px] text-red-500"></i>
+              <i className="pi pi-gift text-[60px] text-green-400"></i>
             </div>
-            <p className="text-center text-xl text-red-500 mt-4">
-              This content is paid and needs to be purchased before viewing.
-            </p>
+            <p className="text-center text-xl text-green-400 mt-4">{PROMO_PRICING_MESSAGE}</p>
             <div className="flex flex-row items-center justify-center w-full mt-4">
-              <ResourcePaymentButton
-                lnAddress={author?.lud16}
-                amount={price}
+            <ResourcePaymentButton
+              lnAddress={author?.lud16}
+              amount={price}
                 onSuccess={handlePaymentSuccess}
                 onError={handlePaymentError}
                 resourceId={processedEvent.d}

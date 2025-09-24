@@ -19,6 +19,8 @@ import appConfig from '@/config/appConfig';
 import { nip19 } from 'nostr-tools';
 import { Buffer } from 'buffer';
 import MarkdownDisplay from '@/components/markdown/MarkdownDisplay';
+import PromoFreeBadge from '@/components/pricing/PromoFreeBadge';
+import { PROMO_PRICING_MESSAGE } from '@/constants/promoPricing';
 
 const VideoDetails = ({
   processedEvent,
@@ -174,20 +176,14 @@ const VideoDetails = ({
       session?.user?.purchased?.some(purchase => purchase.courseId === course)
     ) {
       return (
-        <GenericButton
-          tooltipOptions={{ position: 'top' }}
-          tooltip={`You have this lesson through purchasing the course it belongs to. You paid ${
-            session?.user?.purchased?.find(purchase => purchase.courseId === course)?.course?.price
-          } sats for the course.`}
-          icon="pi pi-check"
-          label={`Paid ${
-            session?.user?.purchased?.find(purchase => purchase.courseId === course)?.course?.price
-          } sats`}
-          severity="success"
-          outlined
-          size="small"
-          className="cursor-default hover:opacity-100 hover:bg-transparent focus:ring-0"
-        />
+        <div className="flex items-center gap-2 text-blue-300">
+          <i className="pi pi-check text-sm" />
+          <PromoFreeBadge
+            wrapperClassName="flex items-center gap-1 text-sm"
+            labelClassName="text-blue-300 font-semibold"
+            iconClassName="pi pi-question-circle text-xs text-blue-300"
+          />
+        </div>
       );
     }
 
@@ -199,29 +195,27 @@ const VideoDetails = ({
       !session?.user?.role?.subscribed
     ) {
       return (
-        <GenericButton
-          icon="pi pi-check"
-          label={`Paid ${processedEvent.price} sats`}
-          severity="success"
-          outlined
-          size="small"
-          className="cursor-default hover:opacity-100 hover:bg-transparent focus:ring-0"
-        />
+        <div className="flex items-center gap-2 text-blue-300">
+          <i className="pi pi-check text-sm" />
+          <PromoFreeBadge
+            wrapperClassName="flex items-center gap-1 text-sm"
+            labelClassName="text-blue-300 font-semibold"
+            iconClassName="pi pi-question-circle text-xs text-blue-300"
+          />
+        </div>
       );
     }
 
     if (paidResource && author && processedEvent?.pubkey === session?.user?.pubkey) {
       return (
-        <GenericButton
-          tooltipOptions={{ position: 'top' }}
-          tooltip={`You created this paid content, users must pay ${processedEvent.price} sats to access it`}
-          icon="pi pi-check"
-          label={`Price ${processedEvent.price} sats`}
-          severity="success"
-          outlined
-          size="small"
-          className="cursor-default hover:opacity-100 hover:bg-transparent focus:ring-0"
-        />
+        <div className="flex items-center gap-2 text-blue-300">
+          <i className="pi pi-check text-sm" />
+          <PromoFreeBadge
+            wrapperClassName="flex items-center gap-1 text-sm"
+            labelClassName="text-blue-300 font-semibold"
+            iconClassName="pi pi-question-circle text-xs text-blue-300"
+          />
+        </div>
       );
     }
 
@@ -245,11 +239,9 @@ const VideoDetails = ({
           ></div>
           <div className="absolute inset-0 bg-black bg-opacity-50"></div>
           <div className="mx-auto py-auto z-10">
-            <i className="pi pi-lock text-[100px] text-red-500"></i>
+            <i className="pi pi-gift text-[100px] text-green-400"></i>
           </div>
-          <p className="text-center text-xl text-red-500 z-10 mt-4">
-            This content is paid and needs to be purchased before viewing.
-          </p>
+          <p className="text-center text-xl text-green-400 z-10 mt-4">{PROMO_PRICING_MESSAGE}</p>
           <div className="flex flex-row items-center justify-center w-full mt-4 z-10">
             <ResourcePaymentButton
               lnAddress={author?.lud16}

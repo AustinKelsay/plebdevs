@@ -107,7 +107,7 @@ export default function Home() {
   const [allTopics, setAllTopics] = useState([]);
   const [selectedTopic, setSelectedTopic] = useState('Top');
   const bannerMessage =
-    'All content is free for a limited time while we finish building out PlebDevs Platform V2. Keep an eye out, coming soon (tm)!';
+    'All content is free while we build PlebDevs V2. New FREE AI course launching with the new platform as well - stay tuned!';
 
   useEffect(() => {
     if (documents && !documentsLoading) {
@@ -136,6 +136,9 @@ export default function Home() {
     }
   }, [courses, coursesLoading]);
 
+  // Filter out topics that look like hex color codes (3 or 6 hex chars)
+  const isHexColor = str => /^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(str);
+
   useEffect(() => {
     const allContent = [...processedDocuments, ...processedVideos, ...processedCourses];
     setAllContent(allContent);
@@ -144,7 +147,8 @@ export default function Home() {
     const otherTopics = Array.from(uniqueTopics).filter(
       topic =>
         !['Top', 'Courses', 'Videos', 'Documents', 'Free', 'Paid', 'More'].includes(topic) &&
-        !['document', 'video', 'course'].includes(topic)
+        !['document', 'video', 'course'].includes(topic) &&
+        !isHexColor(topic)
     );
     setAllTopics(otherTopics);
 

@@ -191,16 +191,16 @@ export default function Home() {
       </Head>
       <main>
         <HeroBanner />
-        <div className="w-full px-4 md:px-12 mt-6">
+        <div className="w-full max-w-[2800px] mx-auto px-4 md:px-12 2xl:px-16 3xl:px-20 4xl:px-24 mt-6">
             <Message
               severity="info"
               icon="pi pi-bolt"
               className="announcement-message"
               content={
                 <span className="announcement-content">
-                  <Badge 
-                    value="Limited" 
-                    className="announcement-badge" 
+                  <Badge
+                    value="Limited"
+                    className="announcement-badge"
                     style={{ color: '#f8f8ff' }}
                   />
                   <span className="announcement-text">{bannerMessage}</span>
@@ -208,7 +208,7 @@ export default function Home() {
               }
             />
         </div>
-        <div className="w-full px-4 md:px-12">
+        <div className="w-full max-w-[2800px] mx-auto px-4 md:px-12 2xl:px-16 3xl:px-20 4xl:px-24">
           <MenuTab
             selectedTopic={selectedTopic}
             onTabChange={handleTopicChange}
@@ -216,7 +216,7 @@ export default function Home() {
             className="w-full"
           />
         </div>
-        <div className="w-full px-4 max-mob:px-0">
+        <div className="w-full max-w-[2800px] mx-auto px-4 max-mob:px-0 2xl:px-8 3xl:px-12 4xl:px-16">
           <CoursesCarousel />
           <VideosCarousel />
           <DocumentsCarousel />

@@ -10,7 +10,17 @@ import { Divider } from 'primereact/divider';
 
 const responsiveOptions = [
   {
-    breakpoint: '3000px',
+    breakpoint: '4000px',
+    numVisible: 5,
+    numScroll: 1,
+  },
+  {
+    breakpoint: '3200px',
+    numVisible: 4,
+    numScroll: 1,
+  },
+  {
+    breakpoint: '2400px',
     numVisible: 3,
     numScroll: 1,
   },

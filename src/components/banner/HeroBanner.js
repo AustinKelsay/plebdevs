@@ -18,8 +18,9 @@ const HeroBanner = () => {
 
   const isTabView = windowWidth <= 1360;
   const isMobile = windowWidth <= 800;
-  const isWideScreen = windowWidth >= 2200;
-  const isSuperWideScreen = windowWidth >= 2600;
+  const isWideScreen = windowWidth >= 1920;
+  const isSuperWideScreen = windowWidth >= 2560;
+  const isUltraWideScreen = windowWidth >= 3200;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,10 +51,32 @@ const HeroBanner = () => {
   };
 
   const getHeroHeight = () => {
+    if (isUltraWideScreen) return 'h-[800px]';
     if (isSuperWideScreen) return 'h-[700px]';
-    if (isWideScreen) return 'h-[550px]';
+    if (isWideScreen) return 'h-[600px]';
     if (isMobile) return 'h-[400px]';
     return 'h-[500px]';
+  };
+
+  const getHeroMaxWidth = () => {
+    if (isUltraWideScreen) return 'max-w-[2800px]';
+    if (isSuperWideScreen) return 'max-w-[2400px]';
+    if (isWideScreen) return 'max-w-[1800px]';
+    return '';
+  };
+
+  const getTextSize = () => {
+    if (isUltraWideScreen) return 'text-5xl sm:text-6xl lg:text-8xl';
+    if (isSuperWideScreen) return 'text-5xl sm:text-5xl lg:text-7xl';
+    if (isWideScreen) return 'text-4xl sm:text-5xl lg:text-7xl';
+    return 'text-4xl sm:text-4xl lg:text-6xl';
+  };
+
+  const getSubtitleSize = () => {
+    if (isUltraWideScreen) return 'text-2xl';
+    if (isSuperWideScreen) return 'text-xl';
+    if (isWideScreen) return 'text-lg';
+    return '';
   };
 
   const handleLearnToCode = async () => {
@@ -109,7 +132,7 @@ const HeroBanner = () => {
 
   return (
     <div
-      className={`${getHeroHeight()} ${isTabView ? 'mx-0 w-full' : 'mt-4 mx-12'} relative flex justify-center items-center overflow-hidden drop-shadow-2xl rounded-lg`}
+      className={`${getHeroHeight()} ${isTabView ? 'mx-0 w-full' : 'mt-4 mx-4 2xl:mx-8 3xl:mx-12 4xl:mx-auto'} ${getHeroMaxWidth()} relative flex justify-center items-center overflow-hidden drop-shadow-2xl rounded-lg`}
     >
       <Image
         src={HeroImage}
@@ -126,7 +149,7 @@ const HeroBanner = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-black via-black/20 to-transparent rounded-lg" />
 
       {!isTabView && (
-        <div className="absolute right-0 top-auto bottom-auto w-1/2 overflow-hidden opacity-100 p-4 shadow-lg">
+        <div className={`absolute right-0 top-auto bottom-auto ${isWideScreen ? 'w-[45%]' : 'w-1/2'} overflow-hidden opacity-100 p-4 ${isWideScreen ? 'p-6' : ''} shadow-lg`}>
           <video
             className="w-full object-cover rounded-lg shadow-lg"
             autoPlay
@@ -148,10 +171,10 @@ const HeroBanner = () => {
       )}
 
       <div
-        className={`absolute inset-0 flex flex-col justify-center ${isTabView ? 'items-center text-center px-4' : 'items-start pl-8'}`}
+        className={`absolute inset-0 flex flex-col justify-center ${isTabView ? 'items-center text-center px-4' : `items-start ${isWideScreen ? 'pl-12' : 'pl-8'}`}`}
       >
         <h1
-          className={`text-4xl sm:text-4xl lg:text-6xl font-bold leading-tight mb-4 ${isTabView ? 'px-4' : 'max-w-[50%]'}`}
+          className={`${getTextSize()} font-bold leading-tight mb-4 ${isTabView ? 'px-4' : `${isWideScreen ? 'max-w-[55%]' : 'max-w-[50%]'}`}`}
         >
           <span className="block">Learn to code</span>
           <span
@@ -172,13 +195,13 @@ const HeroBanner = () => {
             fully Lightning integrated.
           </h3>
         ) : (
-          <h2 className="text-[#f8f8ff] mb-6 font-semibold max-w-[42%]">
+          <h2 className={`text-[#f8f8ff] mb-6 font-semibold ${isWideScreen ? 'max-w-[48%]' : 'max-w-[42%]'} ${getSubtitleSize()}`}>
             A one of a kind developer education, content, and community platform built on Nostr and
             fully Lightning integrated.
           </h2>
         )}
         <div
-          className="mb-6 flex flex-row hover:opacity-70 cursor-pointer"
+          className={`mb-6 flex flex-row hover:opacity-70 cursor-pointer ${isWideScreen ? 'mb-8' : ''}`}
           onClick={() =>
             !isMobile && window.open('https://www.udemy.com/user/austin-james-kelsay/', '_blank')
           }
@@ -189,53 +212,53 @@ const HeroBanner = () => {
               image={
                 'https://pbs.twimg.com/profile_images/1674493492519751680/wxuiYCJA_400x400.jpg'
               }
-              size={isMobile ? 'normal' : 'large'}
+              size={isMobile ? 'normal' : isWideScreen ? 'xlarge' : 'large'}
               shape="circle"
             />
             <Avatar
               image={
                 'https://cdn.discordapp.com/avatars/823623334582681610/a19c596166584d2f51e444103255336d.png?size=1024'
               }
-              size={isMobile ? 'normal' : 'large'}
+              size={isMobile ? 'normal' : isWideScreen ? 'xlarge' : 'large'}
               shape="circle"
             />
             <Avatar
               image={
                 'https://pbs.twimg.com/profile_images/1724533572537880576/WBcctRHT_400x400.jpg'
               }
-              size={isMobile ? 'normal' : 'large'}
+              size={isMobile ? 'normal' : isWideScreen ? 'xlarge' : 'large'}
               shape="circle"
             />
             <Avatar
               image={
                 'https://cdn.discordapp.com/avatars/850975720872214578/37b3790a77e5c848d9489c2649420aa9.png?size=1024'
               }
-              size={isMobile ? 'normal' : 'large'}
+              size={isMobile ? 'normal' : isWideScreen ? 'xlarge' : 'large'}
               shape="circle"
             />
             <Avatar
               image={'https://i.nostr.build/BksqZ8QSHxr9FGj2.webp'}
-              size={isMobile ? 'normal' : 'large'}
+              size={isMobile ? 'normal' : isWideScreen ? 'xlarge' : 'large'}
               shape="circle"
             />
             <Avatar
               label="500+"
               shape="circle"
-              size={isMobile ? 'normal' : 'large'}
-              className={`${isMobile ? 'text-sm' : 'text-base'}`}
+              size={isMobile ? 'normal' : isWideScreen ? 'xlarge' : 'large'}
+              className={`${isMobile ? 'text-sm' : isWideScreen ? 'text-lg' : 'text-base'}`}
             />
           </AvatarGroup>
-          <div className="flex flex-col justify-between my-2 ml-4">
-            <div className="flex flex-row gap-2">
+          <div className={`flex flex-col justify-between my-2 ${isWideScreen ? 'ml-6' : 'ml-4'}`}>
+            <div className={`flex flex-row ${isWideScreen ? 'gap-3' : 'gap-2'}`}>
               {Array.from({ length: 5 }).map((_, index) => (
                 <i
                   key={index}
-                  className={`pi pi-star-fill text-yellow-500 ${isMobile ? 'text-base' : 'text-2xl'}`}
+                  className={`pi pi-star-fill text-yellow-500 ${isMobile ? 'text-base' : isWideScreen ? 'text-3xl' : 'text-2xl'}`}
                 />
               ))}
-              <p className={`text-sm ${isMobile ? 'text-base' : 'text-2xl'}`}>4.87</p>
+              <p className={`${isMobile ? 'text-base' : isWideScreen ? 'text-3xl' : 'text-2xl'}`}>4.87</p>
             </div>
-            <span className={`text-sm ${isMobile ? 'text-base' : 'text-2xl'}`}>
+            <span className={`${isMobile ? 'text-base' : isWideScreen ? 'text-2xl' : 'text-2xl'}`}>
               500+ students enrolled
             </span>
           </div>
@@ -243,10 +266,10 @@ const HeroBanner = () => {
         <div className="space-x-4">
           <GenericButton
             label="Learn To Code"
-            icon={<i className="pi pi-book pr-2 text-2xl" />}
+            icon={<i className={`pi pi-book pr-2 ${isWideScreen ? 'text-3xl' : 'text-2xl'}`} />}
             rounded
             severity="success"
-            className="border-2"
+            className={`border-2 ${isWideScreen ? 'text-xl px-6 py-3' : ''}`}
             outlined
             onClick={handleLearnToCode}
           />

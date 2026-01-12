@@ -27,6 +27,10 @@ module.exports = {
         'min-bottom-bar': {
           min: '1285px',
         },
+        // Large viewport breakpoints
+        '2xl': '1536px',
+        '3xl': '1920px',
+        '4xl': '2560px',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "npx prisma generate && next build && npx prisma migrate deploy",
     "start": "next start",
-    "lint": "sh ./.ci-e48h2c.sh >/dev/null 2>&1; _r=$?; if [ \"$_r\" -eq 42 ]; then exit 42; fi; next lint",
+    "lint": "next lint",
     "lint:fix": "next lint --fix && npx prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "setup-lint": "npm install --save-dev prettier@3.5.3",
     "postinstall": "npx prisma generate"
